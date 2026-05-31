@@ -185,6 +185,12 @@ public class GameView extends View {
         text.setColor(0xFFE9DCBC);
         text.setTextSize(boardY * 0.20f);
         cv.drawText(status, W/2f, boardY*0.74f, text);
+        // build tag so you can confirm the install updated
+        text.setColor(0xFF7E6A44);
+        text.setTextSize(boardY * 0.13f);
+        text.setTextAlign(Paint.Align.RIGHT);
+        cv.drawText("v1.1 · last unit standing", W - boardX, boardY*0.96f, text);
+        text.setTextAlign(Paint.Align.CENTER);
     }
 
     // ---------------------------------------------------------------- tray

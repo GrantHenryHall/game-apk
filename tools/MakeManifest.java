@@ -120,8 +120,8 @@ public class MakeManifest {
         final String PKG     = "com.grant.admirals";
         final String CLAZZ   = "com.grant.admirals.MainActivity";
         final String LABEL   = "Bombs & Admirals";
-        final int    VCODE   = 1;
-        final String VNAME   = "1.0";
+        final int    VCODE   = 2;
+        final String VNAME   = "1.1";
         final int    MINSDK  = 24;
         final int    TARGET  = 28;
 
