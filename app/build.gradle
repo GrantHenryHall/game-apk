@@ -1,0 +1,42 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.broadside.bombs'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.broadside.bombs"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    // Bundle the web game (../www) directly as Android assets so it runs offline.
+    sourceSets {
+        main {
+            assets.srcDirs += ['../www']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            // debug builds are signed with the auto-generated debug keystore and
+            // are directly installable on a phone (enable "install unknown apps").
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // No external dependencies — uses the framework WebView + Activity only.
+}

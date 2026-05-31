@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Broadside &amp; Bombs</title>
+<style>
+  :root{
+    --parch:#e9d8a6; --parch-d:#cdb37a;
+    --ink:#2b1a0e; --ink-soft:#5a4326;
+    --navy:#1d3b53; --navy-l:#2f5f80;
+    --crimson:#6e1d22; --crimson-l:#9c2b2f;
+    --gold:#c8972e; --gold-l:#f0c95a;
+    --felt:#244236;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Georgia","Times New Roman",serif;
+    color:var(--parch);
+    background:
+      radial-gradient(circle at 50% -10%, #34536b 0%, transparent 45%),
+      radial-gradient(circle at 50% 120%, #20140a 0%, transparent 55%),
+      linear-gradient(160deg,#13212c 0%,#0e1820 55%,#0a1014 100%);
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100%; overflow-x:hidden;
+    padding:env(safe-area-inset-top) 8px env(safe-area-inset-bottom);
+    -webkit-user-select:none; user-select:none; touch-action:manipulation;
+  }
+  header{ text-align:center; margin:6px 0 2px; width:100%; }
+  h1{
+    margin:0; font-size:clamp(20px,6vw,30px); letter-spacing:2px;
+    font-variant:small-caps; font-weight:700;
+    color:var(--gold-l);
+    text-shadow:0 1px 0 #5a3d12, 0 0 14px rgba(200,151,46,.45);
+  }
+  .sub{ font-size:11px; letter-spacing:3px; color:#9fb0bb; opacity:.8; margin-top:-2px; font-variant:small-caps;}
+  #status{
+    font-size:clamp(13px,3.6vw,16px); min-height:1.4em; text-align:center;
+    margin:6px 0; font-weight:bold; letter-spacing:.5px; max-width:560px; padding:0 6px;
+  }
+  #status .nv{color:var(--gold-l);} #status .cr{color:#f1a3a3;}
+  #wrap{ width:100%; max-width:560px; }
+  #boardWrap{ position:relative; width:100%; }
+  canvas#board{
+    width:100%; display:block; border-radius:8px;
+    box-shadow:0 8px 30px rgba(0,0,0,.6), 0 0 0 6px #3a2a17, 0 0 0 8px var(--gold);
+    background:#1a2a22; touch-action:none;
+  }
+  #tray{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+    margin:10px 0 4px; width:100%; max-width:560px;
+  }
+  .chip{
+    position:relative; width:58px; padding:4px 2px 3px; border-radius:8px;
+    background:linear-gradient(180deg,#2a2016,#1a130b);
+    border:1px solid #5a431f; text-align:center; cursor:pointer;
+    transition:transform .12s, box-shadow .12s, border-color .12s;
+  }
+  .chip canvas{ width:42px; height:42px; display:block; margin:0 auto; }
+  .chip .nm{ font-size:8.5px; line-height:1.05; color:var(--parch); letter-spacing:.2px; margin-top:1px;}
+  .chip .ct{ position:absolute; top:-6px; right:-6px; background:var(--gold); color:#1a130b;
+    font-size:10px; font-weight:bold; border-radius:10px; min-width:16px; padding:1px 3px; }
+  .chip.sel{ transform:translateY(-3px); border-color:var(--gold-l); box-shadow:0 0 0 2px var(--gold-l),0 6px 16px rgba(0,0,0,.5);}
+  .chip.done{ opacity:.32; filter:grayscale(.7); pointer-events:none;}
+  .chip.bomb{ background:linear-gradient(180deg,#3a1414,#1a0707); border-color:#7a2a2a;}
+  .chip.bomb.sel{ box-shadow:0 0 0 2px #ff7a3c,0 6px 16px rgba(0,0,0,.5); border-color:#ff7a3c;}
+  #controls{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0 16px;}
+  button{
+    font-family:inherit; font-variant:small-caps; letter-spacing:1px; font-size:14px; font-weight:bold;
+    color:#1a130b; cursor:pointer; padding:9px 16px; border-radius:8px; border:1px solid #7a5a23;
+    background:linear-gradient(180deg,var(--gold-l),var(--gold)); box-shadow:0 3px 0 #6e4f1d, 0 5px 10px rgba(0,0,0,.4);
+    transition:transform .08s;
+  }
+  button:active{ transform:translateY(2px); box-shadow:0 1px 0 #6e4f1d;}
+  button.ghost{ background:linear-gradient(180deg,#324a5c,#22323e); color:var(--parch); border-color:#4a6478; box-shadow:0 3px 0 #16242e;}
+  button:disabled{ opacity:.4; pointer-events:none;}
+  #hint{ font-size:12px; color:#bfae86; max-width:540px; text-align:center; line-height:1.45; margin:2px auto 18px; padding:0 8px;}
+  #hint b{color:var(--gold-l);}
+  .legend{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:middle;margin:0 2px;}
+  /* Overlay banner */
+  #banner{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50;
+    background:radial-gradient(circle at 50% 50%, rgba(0,0,0,.55), rgba(0,0,0,.86));
+    backdrop-filter:blur(2px); padding:20px;
+  }
+  #banner .card{
+    background:linear-gradient(180deg,#ece0c0,#cdb37a); color:var(--ink);
+    border:3px solid var(--gold); border-radius:14px; padding:26px 28px; text-align:center;
+    max-width:340px; box-shadow:0 16px 60px rgba(0,0,0,.7);
+    font-family:Georgia,serif;
+  }
+  #banner h2{ margin:0 0 8px; font-variant:small-caps; letter-spacing:2px; font-size:26px;}
+  #banner p{ margin:0 0 16px; font-size:14px; line-height:1.5;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Broadside &amp; Bombs</h1>
+  <div class="sub">a naval affair of honour · 10 × 10</div>
+</header>
+<div id="status">Loading the powder magazine…</div>
+<div id="wrap">
+  <div id="boardWrap"><canvas id="board"></canvas></div>
+  <div id="tray"></div>
+  <div id="controls">
+    <button id="btnAuto" class="ghost">Auto-deploy</button>
+    <button id="btnStart" disabled>Sound the Charge</button>
+    <button id="btnNew" class="ghost">New Game</button>
+    <button id="btnMute" class="ghost">🔊</button>
+  </div>
+  <div id="hint"></div>
+</div>
+<div id="banner"><div class="card"><h2 id="bTitle"></h2><p id="bText"></p><button id="bBtn">Again</button></div></div>
+
+<script>
+"use strict";
+/* ============================================================
+   BROADSIDE & BOMBS  —  10x10 tactical naval chess with bombs
+   Single-file, offline-capable, touch + mouse.
+   ============================================================ */
+
+const N = 10;                 // board is N x N
+const NAVY = 0, CRIMSON = 1;  // sides: player = NAVY (bottom), AI = CRIMSON (top)
+const BOMBS_PER_SIDE = 5;
+
+/* ---------- Piece catalogue (12 unique units per side) ---------- */
+// dir: forward for NAVY is -1 (up), for CRIMSON is +1 (down)
+// moves described by generator type. value used by AI.
+const PIECES = {
+  admiral:   {name:"Admiral",      glyph:"admiral",   value:1000, royal:true,  count:1, gen:"step8"},
+  flagship:  {name:"Flagship",     glyph:"flagship",  value:9,    count:1, gen:"slide8"},
+  manowar:   {name:"Man-o'-War",   glyph:"manowar",   value:5,    count:1, gen:"slideOrtho"},
+  navigator: {name:"Navigator",    glyph:"navigator", value:3,    count:1, gen:"slideDiag"},
+  dragoon:   {name:"Dragoon",      glyph:"dragoon",   value:3,    count:1, gen:"knight"},
+  serpent:   {name:"Sea Serpent",  glyph:"serpent",   value:4,    count:1, gen:"slide8_2"},
+  bombardier:{name:"Bombardier",   glyph:"bombardier",value:3,    count:1, gen:"slideOrtho_2"},
+  harpooner: {name:"Harpooner",    glyph:"harpooner", value:3,    count:1, gen:"slideDiag_2"},
+  corsair:   {name:"Corsair",      glyph:"corsair",   value:3,    count:1, gen:"corsair"},
+  bosun:     {name:"Bosun",        glyph:"bosun",     value:2,    count:1, gen:"step8_1"},
+  marine:    {name:"Marine",       glyph:"marine",    value:1,    count:1, gen:"marine"},
+  monkey:    {name:"Powder Monkey",glyph:"monkey",    value:1,    count:1, gen:"stepOrtho"},
+};
+// 12 unique pieces per side (5 reskinned classics + 7 originals)
+const ROSTER_ORDER = ["admiral","flagship","manowar","navigator","dragoon","serpent",
+                      "bombardier","harpooner","corsair","bosun","marine","monkey"];
+
+const PIECE_DESC = {
+  admiral:"Steps 1 square any way. Capture him to win — guard your own with your life.",
+  flagship:"Sweeps any distance in any of the 8 lines. The fleet's heaviest gun.",
+  manowar:"Sails any distance along ranks & files.",
+  navigator:"Glides any distance on the diagonals.",
+  dragoon:"Leaps in an L, clearing all in its path.",
+  serpent:"Slithers up to 2 squares in any of 8 directions.",
+  bombardier:"Rolls up to 2 squares along ranks & files.",
+  harpooner:"Lunges up to 2 squares on the diagonals.",
+  corsair:"Boards 1 diagonal step, or leaps exactly 2 straight.",
+  bosun:"Marches 1 square any direction.",
+  marine:"Advances 1 square forward or forward-diagonal.",
+  monkey:"Scurries 1 square along a rank or file.",
+};
+
+/* ---------- Game state ---------- */
+let state;
+function freshState(){
+  return {
+    phase:"deploy",            // deploy | battle | over
+    board: Array.from({length:N},()=>Array(N).fill(null)), // each cell: piece obj or null
+    bombs: [ [], [] ],         // bombs[side] = array of {r,c}
+    roster: makeRoster(),      // remaining-to-deploy counts for player (NAVY)
+    bombsLeft: BOMBS_PER_SIDE,
+    selectedKind:null,         // tray selection: piece key or "bomb"
+    selectedSq:null,           // battle: selected board piece {r,c}
+    legal:[],                  // legal target squares for selectedSq
+    turn:NAVY,
+    busy:false,                // animation/AI lock
+    winner:null,
+  };
+}
+function makeRoster(){
+  const r={};
+  for(const k of ROSTER_ORDER) r[k]=PIECES[k].count;
+  return r;
+}
+let pieceUID=1;
+function mkPiece(kind, side){ return {kind, side, id:pieceUID++, blasted:false}; }
+
+/* ---------- Canvas ---------- */
+const canvas=document.getElementById("board");
+const ctx=canvas.getContext("2d");
+let CELL=40, DPR=1, BOARD_PX=400;
+function layout(){
+  const wrap=document.getElementById("wrap");
+  const w=Math.min(wrap.clientWidth, 560);
+  DPR=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+  BOARD_PX=Math.floor(w);
+  CELL=BOARD_PX/N;
+  canvas.style.height=BOARD_PX+"px";
+  canvas.width=Math.floor(BOARD_PX*DPR);
+  canvas.height=Math.floor(BOARD_PX*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener("resize",()=>{layout();});
+
+/* ---------- Animations & particles ---------- */
+let anims=[];      // moving pieces / deploy drops
+let particles=[];  // explosion bits
+let shake=0;       // screen shake intensity
+let flash=0;       // white flash alpha
+let smoke=[];      // lingering smoke puffs
+const now=()=>performance.now();
+
+function addParticle(p){ particles.push(p); }
+function explode(r,c){
+  // big beautiful cannon-smoke + fire explosion centred on cell r,c
+  shake=Math.max(shake,16);
+  flash=0.55;
+  const cx=c*CELL+CELL/2, cy=r*CELL+CELL/2;
+  // shockwave ring
+  particles.push({type:"ring", x:cx,y:cy, t0:now(), life:520, r0:CELL*0.2, r1:CELL*2.4});
+  particles.push({type:"ring", x:cx,y:cy, t0:now()+60, life:600, r0:CELL*0.1, r1:CELL*3.1});
+  // fire core
+  for(let i=0;i<46;i++){
+    const a=Math.random()*Math.PI*2, sp=(0.5+Math.random()*2.6)*CELL/22;
+    particles.push({type:"fire", x:cx,y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-0.4,
+      t0:now(), life:380+Math.random()*420, size:CELL*(0.10+Math.random()*0.22)});
+  }
+  // embers
+  for(let i=0;i<30;i++){
+    const a=Math.random()*Math.PI*2, sp=(1+Math.random()*4)*CELL/22;
+    particles.push({type:"ember", x:cx,y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.2,
+      t0:now(), life:600+Math.random()*700, size:CELL*0.05});
+  }
+  // smoke plume
+  for(let i=0;i<22;i++){
+    const a=Math.random()*Math.PI*2, sp=(0.2+Math.random()*1.4)*CELL/22;
+    smoke.push({x:cx+(Math.random()-.5)*CELL, y:cy+(Math.random()-.5)*CELL,
+      vx:Math.cos(a)*sp*0.5, vy:Math.sin(a)*sp*0.5-0.5,
+      t0:now()+Math.random()*120, life:1100+Math.random()*900,
+      size:CELL*(0.5+Math.random()*0.7)});
+  }
+  // wood splinters
+  for(let i=0;i<18;i++){
+    const a=Math.random()*Math.PI*2, sp=(1.5+Math.random()*4.5)*CELL/22;
+    particles.push({type:"splinter", x:cx,y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-2,
+      rot:Math.random()*6.28, vr:(Math.random()-.5)*0.6, t0:now(), life:700+Math.random()*500,
+      len:CELL*0.18});
+  }
+  sfx.boom();
+}
+
+/* ---------- Geometry helpers ---------- */
+const inb=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
+function forwardOf(side){ return side===NAVY ? -1 : +1; }
+function deployZoneRows(side){ return side===NAVY ? [7,8,9] : [0,1,2]; }
+function bombZoneRows(side){ return side===NAVY ? [3,4,5,6,7,8,9] : [0,1,2,3,4,5,6]; }
+
+/* ---------- Move generation ---------- */
+const DIRS8=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const ORTHO=[[-1,0],[1,0],[0,-1],[0,1]];
+const DIAG=[[-1,-1],[-1,1],[1,-1],[1,1]];
+const KNIGHT=[[-2,-1],[-2,1],[2,-1],[2,1],[-1,-2],[1,-2],[-1,2],[1,2]];
+
+function genMoves(board,r,c){
+  const pc=board[r][c]; if(!pc) return [];
+  const side=pc.side, out=[];
+  const slide=(dirs,max)=>{
+    for(const [dr,dc] of dirs){
+      for(let i=1;i<=max;i++){
+        const nr=r+dr*i, nc=c+dc*i;
+        if(!inb(nr,nc)) break;
+        const t=board[nr][nc];
+        if(!t){ out.push([nr,nc]); }
+        else { if(t.side!==side) out.push([nr,nc]); break; }
+      }
+    }
+  };
+  const stepInto=(nr,nc)=>{ if(inb(nr,nc)){ const t=board[nr][nc]; if(!t||t.side!==side) out.push([nr,nc]); } };
+  switch(PIECES[pc.kind].gen){
+    case "step8":     DIRS8.forEach(([dr,dc])=>stepInto(r+dr,c+dc)); break;
+    case "step8_1":   DIRS8.forEach(([dr,dc])=>stepInto(r+dr,c+dc)); break;
+    case "slide8":    slide(DIRS8,N); break;
+    case "slide8_2":  slide(DIRS8,2); break;
+    case "slideOrtho":slide(ORTHO,N); break;
+    case "slideOrtho_2":slide(ORTHO,2); break;
+    case "slideDiag": slide(DIAG,N); break;
+    case "slideDiag_2":slide(DIAG,2); break;
+    case "stepOrtho": ORTHO.forEach(([dr,dc])=>stepInto(r+dr,c+dc)); break;
+    case "knight":    KNIGHT.forEach(([dr,dc])=>stepInto(r+dr,c+dc)); break;
+    case "corsair":   // 1 diagonal step, or leap exactly 2 orthogonally (over anything)
+      DIAG.forEach(([dr,dc])=>stepInto(r+dr,c+dc));
+      ORTHO.forEach(([dr,dc])=>stepInto(r+dr*2,c+dc*2));
+      break;
+    case "marine":{   // 1 forward or forward-diagonal
+      const f=forwardOf(side);
+      stepInto(r+f,c); stepInto(r+f,c-1); stepInto(r+f,c+1);
+      break;
+    }
+  }
+  return out;
+}
+
+/* ---------- Apply a move (returns events for animation) ---------- */
+function pieceAt(board,r,c){ return board[r][c]; }
+function findAdmiral(board,side){
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){const p=board[r][c]; if(p&&p.side===side&&PIECES[p.kind].royal) return {r,c,p};}
+  return null;
+}
+
+/* ---------- Rendering ---------- */
+const COL_LIGHT="#d8c79b", COL_DARK="#b89a64";
+function sideColors(side){
+  return side===NAVY
+    ? {base:"#1d3b53", edge:"#0e2434", ring:"#c9a23a", glyph:"#f3e6c0", glow:"rgba(80,140,200,.5)"}
+    : {base:"#6e1d22", edge:"#3a0d10", ring:"#c8972e", glyph:"#f6dcc2", glow:"rgba(220,80,80,.5)"};
+}
+
+function draw(){
+  const t=now();
+  ctx.save();
+  // screen shake
+  if(shake>0.3){ ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake); shake*=0.86; } else shake=0;
+  // board squares (weathered map)
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    ctx.fillStyle=((r+c)&1)?COL_DARK:COL_LIGHT;
+    ctx.fillRect(c*CELL,r*CELL,CELL+0.6,CELL+0.6);
+  }
+  // subtle parchment grain
+  ctx.globalAlpha=0.06;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    if(((r*7+c*13)%5)===0){ ctx.fillStyle="#000"; ctx.fillRect(c*CELL+CELL*0.2,r*CELL+CELL*0.3,CELL*0.5,CELL*0.3);}
+  }
+  ctx.globalAlpha=1;
+  // deployment zone tinting
+  if(state.phase==="deploy"){
+    ctx.fillStyle="rgba(29,59,83,.20)"; deployZoneRows(NAVY).forEach(r=>ctx.fillRect(0,r*CELL,BOARD_PX,CELL));
+    ctx.fillStyle="rgba(110,29,34,.16)"; deployZoneRows(CRIMSON).forEach(r=>ctx.fillRect(0,r*CELL,BOARD_PX,CELL));
+  }
+  // grid lines
+  ctx.strokeStyle="rgba(40,26,12,.35)"; ctx.lineWidth=1;
+  for(let i=0;i<=N;i++){
+    ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,BOARD_PX);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*CELL);ctx.lineTo(BOARD_PX,i*CELL);ctx.stroke();
+  }
+
+  // own bombs (visible to player only) — buried mine markers
+  for(const b of state.bombs[NAVY]) drawMine(b.r,b.c,t);
+
+  // legal-move highlights
+  if(state.selectedSq){
+    const {r,c}=state.selectedSq;
+    ctx.save();
+    ctx.fillStyle="rgba(240,201,90,.30)"; ctx.fillRect(c*CELL,r*CELL,CELL,CELL);
+    for(const [mr,mc] of state.legal){
+      const cap=!!state.board[mr][mc];
+      ctx.beginPath();
+      if(cap){ ctx.strokeStyle="rgba(220,60,60,.9)"; ctx.lineWidth=3; ctx.arc(mc*CELL+CELL/2,mr*CELL+CELL/2,CELL*0.42,0,7); ctx.stroke(); }
+      else { ctx.fillStyle="rgba(40,30,15,.45)"; ctx.arc(mc*CELL+CELL/2,mr*CELL+CELL/2,CELL*0.16,0,7); ctx.fill(); }
+    }
+    ctx.restore();
+  }
+  // valid deploy squares pulse
+  if(state.phase==="deploy" && state.selectedKind){
+    const isBomb=state.selectedKind==="bomb";
+    const rows=isBomb?bombZoneRows(NAVY):deployZoneRows(NAVY);
+    const pulse=0.18+0.12*Math.sin(t/240);
+    ctx.fillStyle=isBomb?`rgba(255,120,60,${pulse})`:`rgba(240,201,90,${pulse})`;
+    for(const r of rows)for(let c=0;c<N;c++){
+      if(!state.board[r][c] && !(isBomb&&hasBomb(NAVY,r,c)))
+        ctx.fillRect(c*CELL+2,r*CELL+2,CELL-4,CELL-4);
+    }
+  }
+
+  // pieces (skip those currently mid-animation; anims draw themselves)
+  const animIds=new Set(anims.filter(a=>a.kind==="move").map(a=>a.piece.id));
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const p=state.board[r][c];
+    if(p && !animIds.has(p.id)) drawPiece(p, c*CELL+CELL/2, r*CELL+CELL/2, CELL*0.82, 1, t);
+  }
+
+  // animations
+  anims=anims.filter(a=>drawAnim(a,t));
+
+  // smoke (under particles for depth)
+  smoke=smoke.filter(s=>{
+    const e=(t-s.t0)/s.life; if(e<0) return true; if(e>=1) return false;
+    const rad=s.size*(0.5+e*1.6); const al=(e<0.2?e/0.2:(1-e))*0.45;
+    s.x+=s.vx; s.y+=s.vy; s.vy-=0.02;
+    const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,rad);
+    g.addColorStop(0,`rgba(60,55,50,${al})`); g.addColorStop(1,"rgba(40,38,34,0)");
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,rad,0,7); ctx.fill();
+    return true;
+  });
+
+  // particles
+  particles=particles.filter(p=>drawParticle(p,t));
+
+  // white flash
+  if(flash>0.01){ ctx.fillStyle=`rgba(255,240,210,${flash})`; ctx.fillRect(0,0,BOARD_PX,BOARD_PX); flash*=0.84; } else flash=0;
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+
+function drawMine(r,c,t){
+  const x=c*CELL+CELL/2, y=r*CELL+CELL/2;
+  const pulse=0.5+0.5*Math.sin(t/300+r+c);
+  ctx.save();
+  ctx.globalAlpha=0.5+0.3*pulse;
+  ctx.fillStyle="#2a1810"; ctx.beginPath(); ctx.arc(x,y,CELL*0.16,0,7); ctx.fill();
+  ctx.strokeStyle="#ff7a3c"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,CELL*0.16,0,7); ctx.stroke();
+  ctx.fillStyle="#ff9a4c"; ctx.beginPath(); ctx.arc(x,y,CELL*0.05*pulse+CELL*0.02,0,7); ctx.fill();
+  ctx.restore();
+}
+function drawParticle(p,t){
+  const e=(t-p.t0)/p.life; if(e<0) return true; if(e>=1) return false;
+  if(p.type==="ring"){
+    const rr=p.r0+(p.r1-p.r0)*e; const al=(1-e)*0.5;
+    ctx.strokeStyle=`rgba(255,210,140,${al})`; ctx.lineWidth=CELL*0.12*(1-e)+1;
+    ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,7); ctx.stroke(); return true;
+  }
+  if(p.type==="fire"){
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.vx*=0.97;
+    const al=(1-e); const sz=p.size*(1-e*0.5);
+    const col=e<0.4?`rgba(255,${230-e*200},120,${al})`:`rgba(${220-e*120},${90-e*60},40,${al*0.9})`;
+    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz);
+    g.addColorStop(0,col); g.addColorStop(1,"rgba(120,30,10,0)");
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,sz,0,7); ctx.fill(); return true;
+  }
+  if(p.type==="ember"){
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.10; p.vx*=0.98;
+    const al=(1-e);
+    ctx.fillStyle=`rgba(255,${180+Math.random()*60|0},80,${al})`;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size*(1-e*0.4)+0.4,0,7); ctx.fill(); return true;
+  }
+  if(p.type==="splinter"){
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.18; p.vx*=0.99; p.rot+=p.vr;
+    const al=(1-e);
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.strokeStyle=`rgba(70,45,22,${al})`; ctx.lineWidth=CELL*0.05;
+    ctx.beginPath(); ctx.moveTo(-p.len/2,0); ctx.lineTo(p.len/2,0); ctx.stroke(); ctx.restore();
+    return true;
+  }
+  return false;
+}
+
+function drawAnim(a,t){
+  const e=Math.min(1,(t-a.t0)/a.dur);
+  if(a.kind==="move"){
+    const ee=e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2; // easeInOut
+    const x=a.x0+(a.x1-a.x0)*ee, y=a.y0+(a.y1-a.y0)*ee;
+    const lift=Math.sin(e*Math.PI)*CELL*0.18;
+    drawPiece(a.piece, x, y-lift, CELL*0.82, 1, t);
+    if(e>=1){ a.done&&a.done(); return false; }
+    return true;
+  }
+  if(a.kind==="deploy"){
+    // piece drops from above with dust puff
+    const ee=1-Math.pow(1-e,3);
+    const y=a.y1-(1-ee)*CELL*2.2;
+    const sc=0.6+0.4*ee;
+    drawPiece(a.piece, a.x1, y, CELL*0.82*sc, Math.min(1,e*2), t);
+    if(e>0.8 && !a.puffed){ a.puffed=true; dustPuff(a.x1,a.y1); sfx.thud(); }
+    if(e>=1){ a.done&&a.done(); return false; }
+    return true;
+  }
+  if(a.kind==="capfade"){
+    drawPiece(a.piece, a.x, a.y, CELL*0.82*(1+e*0.3), 1-e, t);
+    return e<1;
+  }
+  return false;
+}
+function dustPuff(x,y){
+  for(let i=0;i<14;i++){
+    const a=Math.random()*Math.PI*2, sp=(0.4+Math.random()*1.6)*CELL/22;
+    smoke.push({x,y:y+CELL*0.2, vx:Math.cos(a)*sp, vy:-Math.abs(Math.sin(a))*sp*0.6,
+      t0:now(), life:500+Math.random()*400, size:CELL*0.30});
+  }
+}
+
+/* ---------- Piece drawing (engraved brass tokens, unique glyphs) ---------- */
+function drawPiece(p, x, y, size, alpha, t){
+  const col=sideColors(p.side); const R=size/2;
+  ctx.save(); ctx.globalAlpha=alpha; ctx.translate(x,y);
+  // drop shadow
+  ctx.fillStyle="rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(0,R*0.78,R*0.8,R*0.32,0,0,7); ctx.fill();
+  // medallion body
+  let g=ctx.createRadialGradient(-R*0.3,-R*0.35,R*0.1,0,0,R);
+  g.addColorStop(0,lighten(col.base,40)); g.addColorStop(0.7,col.base); g.addColorStop(1,col.edge);
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,R*0.94,0,7); ctx.fill();
+  // gilded ring
+  ctx.lineWidth=R*0.12; ctx.strokeStyle=col.ring;
+  ctx.beginPath(); ctx.arc(0,0,R*0.86,0,7); ctx.stroke();
+  ctx.lineWidth=R*0.04; ctx.strokeStyle=lighten(col.ring,40);
+  ctx.beginPath(); ctx.arc(0,0,R*0.92,0,7); ctx.stroke();
+  // glyph
+  ctx.strokeStyle=col.glyph; ctx.fillStyle=col.glyph;
+  ctx.lineWidth=Math.max(1.4,R*0.10); ctx.lineCap="round"; ctx.lineJoin="round";
+  GLYPHS[PIECES[p.kind].glyph](ctx,R*0.62);
+  ctx.restore();
+}
+function lighten(hex,amt){
+  const c=parseInt(hex.slice(1),16); let r=(c>>16)+amt,g=((c>>8)&255)+amt,b=(c&255)+amt;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return `rgb(${r},${g},${b})`;
+}
+
+/* Each glyph drawn centred at (0,0), scaled to ~ s radius. Stroke style preset. */
+const GLYPHS={
+  admiral(c,s){ // bicorne hat + cockade
+    c.beginPath(); c.moveTo(-s,0.15*s); c.quadraticCurveTo(0,-1.1*s,s,0.15*s);
+    c.quadraticCurveTo(0,0.5*s,-s,0.15*s); c.closePath(); c.fill();
+    c.beginPath(); c.arc(0,-0.05*s,0.22*s,0,7); c.fillStyle="#c8972e"; c.fill();
+  },
+  flagship(c,s){ // tall ship with sails
+    c.lineWidth=Math.max(1.2,s*0.14);
+    c.beginPath(); c.moveTo(-0.8*s,0.55*s); c.lineTo(0.8*s,0.55*s); c.lineTo(0.5*s,0.85*s); c.lineTo(-0.5*s,0.85*s); c.closePath(); c.stroke(); // hull
+    c.beginPath(); c.moveTo(0,0.55*s); c.lineTo(0,-0.9*s); c.stroke(); // mast
+    c.beginPath(); c.moveTo(0.04*s,-0.8*s); c.quadraticCurveTo(0.7*s,-0.4*s,0.04*s,0.2*s); c.closePath();
+    c.moveTo(-0.04*s,-0.8*s); c.quadraticCurveTo(-0.7*s,-0.4*s,-0.04*s,0.2*s); c.closePath(); c.fill();
+  },
+  manowar(c,s){ // cannon
+    c.lineWidth=s*0.34; c.lineCap="round";
+    c.beginPath(); c.moveTo(-0.7*s,0.1*s); c.lineTo(0.6*s,-0.35*s); c.stroke(); // barrel
+    c.lineWidth=s*0.1;
+    c.beginPath(); c.arc(-0.55*s,0.45*s,0.22*s,0,7); c.stroke(); // wheel
+    c.beginPath(); c.arc(0.25*s,0.45*s,0.22*s,0,7); c.stroke();
+  },
+  navigator(c,s){ // compass rose
+    c.lineWidth=s*0.1;
+    c.beginPath(); c.arc(0,0,0.7*s,0,7); c.stroke();
+    c.beginPath();
+    c.moveTo(0,-0.85*s);c.lineTo(0.16*s,-0.16*s);c.lineTo(0.85*s,0);c.lineTo(0.16*s,0.16*s);
+    c.lineTo(0,0.85*s);c.lineTo(-0.16*s,0.16*s);c.lineTo(-0.85*s,0);c.lineTo(-0.16*s,-0.16*s);
+    c.closePath(); c.fill();
+  },
+  dragoon(c,s){ // crossed sabres
+    c.lineWidth=s*0.16; c.lineCap="round";
+    c.beginPath(); c.moveTo(-0.75*s,0.75*s); c.quadraticCurveTo(0.4*s,-0.2*s,0.8*s,-0.8*s); c.stroke();
+    c.beginPath(); c.moveTo(0.75*s,0.75*s); c.quadraticCurveTo(-0.4*s,-0.2*s,-0.8*s,-0.8*s); c.stroke();
+    c.lineWidth=s*0.1;
+    c.beginPath(); c.moveTo(-0.85*s,0.55*s); c.lineTo(-0.55*s,0.85*s); c.stroke();
+    c.beginPath(); c.moveTo(0.85*s,0.55*s); c.lineTo(0.55*s,0.85*s); c.stroke();
+  },
+  serpent(c,s){ // sea serpent wave
+    c.lineWidth=s*0.16; c.lineCap="round";
+    c.beginPath(); c.moveTo(-0.85*s,0.4*s);
+    c.bezierCurveTo(-0.4*s,-0.6*s,0.1*s,0.7*s,0.5*s,-0.2*s);
+    c.bezierCurveTo(0.7*s,-0.6*s,0.85*s,-0.7*s,0.85*s,-0.7*s); c.stroke();
+    c.beginPath(); c.arc(0.8*s,-0.7*s,0.13*s,0,7); c.fill(); // head
+  },
+  bombardier(c,s){ // round bomb with fuse
+    c.beginPath(); c.arc(0,0.15*s,0.55*s,0,7); c.fill();
+    c.lineWidth=s*0.12; c.lineCap="round"; c.strokeStyle=c.fillStyle;
+    c.beginPath(); c.moveTo(0.2*s,-0.35*s); c.quadraticCurveTo(0.6*s,-0.6*s,0.45*s,-0.85*s); c.stroke();
+    c.fillStyle="#ff9a4c"; c.beginPath(); c.arc(0.45*s,-0.85*s,0.1*s,0,7); c.fill();
+  },
+  harpooner(c,s){ // harpoon / trident head
+    c.lineWidth=s*0.13; c.lineCap="round";
+    c.beginPath(); c.moveTo(0,0.85*s); c.lineTo(0,-0.5*s); c.stroke();
+    c.beginPath(); c.moveTo(0,-0.85*s); c.lineTo(-0.28*s,-0.4*s); c.lineTo(0,-0.55*s); c.lineTo(0.28*s,-0.4*s); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-0.3*s,-0.2*s); c.lineTo(-0.15*s,-0.45*s); c.stroke();
+    c.beginPath(); c.moveTo(0.3*s,-0.2*s); c.lineTo(0.15*s,-0.45*s); c.stroke();
+  },
+  corsair(c,s){ // hook & cutlass (raider)
+    c.lineWidth=s*0.13; c.lineCap="round";
+    c.beginPath(); c.moveTo(-0.2*s,0.8*s); c.lineTo(-0.2*s,-0.3*s);
+    c.quadraticCurveTo(-0.2*s,-0.8*s,0.35*s,-0.7*s); c.stroke(); // hook
+    c.beginPath(); c.moveTo(0.45*s,0.8*s); c.quadraticCurveTo(0.7*s,-0.1*s,0.2*s,-0.7*s); c.stroke();
+  },
+  bosun(c,s){ // ship's wheel
+    c.lineWidth=s*0.1;
+    c.beginPath(); c.arc(0,0,0.5*s,0,7); c.stroke();
+    c.beginPath(); c.arc(0,0,0.18*s,0,7); c.fill();
+    for(let i=0;i<8;i++){ const a=i*Math.PI/4; c.beginPath();
+      c.moveTo(Math.cos(a)*0.5*s,Math.sin(a)*0.5*s); c.lineTo(Math.cos(a)*0.82*s,Math.sin(a)*0.82*s); c.stroke();
+      c.beginPath(); c.arc(Math.cos(a)*0.82*s,Math.sin(a)*0.82*s,0.07*s,0,7); c.fill(); }
+  },
+  marine(c,s){ // musket with bayonet
+    c.lineWidth=s*0.14; c.lineCap="round";
+    c.beginPath(); c.moveTo(-0.5*s,0.75*s); c.lineTo(0.4*s,-0.55*s); c.stroke();
+    c.beginPath(); c.moveTo(0.4*s,-0.55*s); c.lineTo(0.7*s,-0.95*s); c.stroke(); // bayonet
+    c.lineWidth=s*0.1;
+    c.beginPath(); c.moveTo(-0.5*s,0.75*s); c.lineTo(-0.75*s,0.6*s); c.stroke(); // stock
+  },
+  monkey(c,s){ // powder keg / barrel
+    c.lineWidth=s*0.1;
+    c.beginPath(); c.moveTo(-0.45*s,-0.6*s); c.quadraticCurveTo(-0.62*s,0,-0.45*s,0.6*s);
+    c.lineTo(0.45*s,0.6*s); c.quadraticCurveTo(0.62*s,0,0.45*s,-0.6*s); c.closePath(); c.stroke();
+    c.beginPath(); c.moveTo(-0.58*s,-0.2*s); c.lineTo(0.58*s,-0.2*s); c.stroke();
+    c.beginPath(); c.moveTo(-0.58*s,0.2*s); c.lineTo(0.58*s,0.2*s); c.stroke();
+  },
+};
+
+/* ---------- Sound (synthesised, no assets) ---------- */
+const sfx=(()=>{
+  let ac=null, muted=false;
+  const ensure=()=>{ if(!ac){ try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return ac; };
+  function tone(f,dur,type,vol,slideTo){
+    if(muted)return; const a=ensure(); if(!a)return;
+    const o=a.createOscillator(), g=a.createGain();
+    o.type=type||"sine"; o.frequency.value=f;
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,a.currentTime+dur);
+    g.gain.value=vol||0.2; g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+    o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+dur);
+  }
+  function noise(dur,vol){
+    if(muted)return; const a=ensure(); if(!a)return;
+    const n=Math.floor(a.sampleRate*dur), buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+    const src=a.createBufferSource(); src.buffer=buf;
+    const g=a.createGain(); g.gain.value=vol||0.4;
+    const f=a.createBiquadFilter(); f.type="lowpass"; f.frequency.value=900;
+    src.connect(f).connect(g).connect(a.destination); src.start();
+  }
+  return {
+    click(){ tone(420,0.06,"triangle",0.12); },
+    thud(){ tone(120,0.18,"sine",0.25,60); noise(0.12,0.18); },
+    move(){ tone(300,0.08,"triangle",0.1,360); },
+    cap(){ tone(200,0.12,"sawtooth",0.18,90); noise(0.1,0.15); },
+    boom(){ noise(0.7,0.6); tone(90,0.6,"sine",0.4,40); tone(60,0.8,"sine",0.3,30); },
+    win(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.3,"triangle",0.2),i*120)); },
+    lose(){ [392,330,262,196].forEach((f,i)=>setTimeout(()=>tone(f,0.35,"sine",0.2),i*140)); },
+    toggle(){ muted=!muted; return muted; }
+  };
+})();
+
+/* ---------- Status / hint ---------- */
+const statusEl=document.getElementById("status");
+const hintEl=document.getElementById("hint");
+function setStatus(html){ statusEl.innerHTML=html; }
+function setHint(html){ hintEl.innerHTML=html; }
+
+/* ---------- Tray (deployment roster) ---------- */
+const trayEl=document.getElementById("tray");
+function buildTray(){
+  trayEl.innerHTML="";
+  for(const k of ROSTER_ORDER){
+    const left=state.roster[k];
+    const chip=document.createElement("div");
+    chip.className="chip"+(left<=0?" done":"")+(state.selectedKind===k?" sel":"");
+    chip.dataset.kind=k;
+    const cv=document.createElement("canvas"); cv.width=84; cv.height=84;
+    drawChipGlyph(cv,k,NAVY);
+    chip.appendChild(cv);
+    const nm=document.createElement("div"); nm.className="nm"; nm.textContent=PIECES[k].name; chip.appendChild(nm);
+    const ct=document.createElement("div"); ct.className="ct"; ct.textContent=left; chip.appendChild(ct);
+    chip.addEventListener("click",()=>selectKind(k));
+    trayEl.appendChild(chip);
+  }
+  // bombs chip
+  const chip=document.createElement("div");
+  chip.className="chip bomb"+(state.bombsLeft<=0?" done":"")+(state.selectedKind==="bomb"?" sel":"");
+  const cv=document.createElement("canvas"); cv.width=84; cv.height=84;
+  drawChipGlyph(cv,"bomb",NAVY);
+  chip.appendChild(cv);
+  const nm=document.createElement("div"); nm.className="nm"; nm.textContent="Sea Mine"; chip.appendChild(nm);
+  const ct=document.createElement("div"); ct.className="ct"; ct.textContent=state.bombsLeft; chip.appendChild(ct);
+  chip.addEventListener("click",()=>selectKind("bomb"));
+  trayEl.appendChild(chip);
+}
+function drawChipGlyph(cv,kind,side){
+  const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height);
+  c.save(); c.translate(cv.width/2,cv.height/2);
+  if(kind==="bomb"){
+    c.fillStyle="#1a0707"; c.beginPath(); c.arc(0,0,38,0,7); c.fill();
+    c.strokeStyle="#ff7a3c"; c.lineWidth=3; c.beginPath(); c.arc(0,0,38,0,7); c.stroke();
+    c.fillStyle="#e7d4a8"; c.strokeStyle="#e7d4a8"; c.lineWidth=4; c.lineCap="round"; c.lineJoin="round";
+    GLYPHS.bombardier(c,22);
+    c.restore(); return;
+  }
+  const col=sideColors(side);
+  let g=c.createRadialGradient(-8,-10,2,0,0,38);
+  g.addColorStop(0,lighten(col.base,40)); g.addColorStop(1,col.edge);
+  c.fillStyle=g; c.beginPath(); c.arc(0,0,38,0,7); c.fill();
+  c.lineWidth=5; c.strokeStyle=col.ring; c.beginPath(); c.arc(0,0,34,0,7); c.stroke();
+  c.strokeStyle=col.glyph; c.fillStyle=col.glyph; c.lineWidth=3.4; c.lineCap="round"; c.lineJoin="round";
+  GLYPHS[PIECES[kind].glyph](c,24);
+  c.restore();
+}
+function selectKind(k){
+  if(state.phase!=="deploy")return;
+  if(k==="bomb"){ if(state.bombsLeft<=0)return; } else if(state.roster[k]<=0) return;
+  state.selectedKind = state.selectedKind===k ? null : k;
+  state.selectedSq=null;
+  buildTray();
+  if(state.selectedKind==="bomb") setHint("Tap any square in <b>your waters</b> (the lower 7 rows) to bury a sea mine. They stay hidden from the enemy and detonate when an enemy hull crosses them.");
+  else if(state.selectedKind) setHint("<b>"+PIECES[k].name+"</b> — "+PIECE_DESC[k]+"<br>Tap a square in your <b>deployment rows</b> (bottom three) to place it.");
+  else setHint(deployHint());
+  sfx.click();
+}
+
+/* ---------- Deploy / placement helpers ---------- */
+function hasBomb(side,r,c){ return state.bombs[side].some(b=>b.r===r&&b.c===c); }
+function bombsRemainingPlayer(){ return state.bombsLeft; }
+function rosterRemaining(){ return ROSTER_ORDER.reduce((s,k)=>s+state.roster[k],0); }
+function deployComplete(){ return rosterRemaining()===0 && state.bombsLeft===0; }
+function deployHint(){
+  const p=rosterRemaining(), b=state.bombsLeft;
+  return `Deploy your fleet: <b>${p}</b> piece${p!==1?"s":""} and <b>${b}</b> sea mine${b!==1?"s":""} remaining. ` +
+         `Pick a unit below, then tap the board. <span class="legend" style="background:#1d3b53"></span>your zone &nbsp; <span class="legend" style="background:#6e1d22"></span>enemy zone.`;
+}
+
+/* ---------- Pointer input ---------- */
+function cellFromEvent(ev){
+  const rect=canvas.getBoundingClientRect();
+  const px=(ev.touches?ev.touches[0].clientX:ev.clientX)-rect.left;
+  const py=(ev.touches?ev.touches[0].clientY:ev.clientY)-rect.top;
+  const c=Math.floor(px/(rect.width/N)), r=Math.floor(py/(rect.height/N));
+  return inb(r,c)?{r,c}:null;
+}
+canvas.addEventListener("click",ev=>{
+  if(state.busy) return;
+  const cell=cellFromEvent(ev); if(!cell) return;
+  if(state.phase==="deploy") onDeployTap(cell);
+  else if(state.phase==="battle" && state.turn===NAVY) onBattleTap(cell);
+});
+
+function onDeployTap({r,c}){
+  if(!state.selectedKind){ setHint(deployHint()); return; }
+  if(state.selectedKind==="bomb"){
+    if(state.bombsLeft<=0) return;
+    if(!bombZoneRows(NAVY).includes(r)){ flashBad(r,c); setHint("Mines may only be laid in <b>your own waters</b> — the lower seven rows."); return; }
+    if(state.board[r][c]){ flashBad(r,c); return; }
+    if(hasBomb(NAVY,r,c)){ // toggle off to reposition
+      state.bombs[NAVY]=state.bombs[NAVY].filter(b=>!(b.r===r&&b.c===c)); state.bombsLeft++;
+    } else {
+      state.bombs[NAVY].push({r,c}); state.bombsLeft--; sfx.thud();
+    }
+    if(state.bombsLeft<=0) state.selectedKind=null;
+    buildTray(); refreshStartBtn(); setHint(deployHint()); return;
+  }
+  const k=state.selectedKind;
+  if(state.roster[k]<=0) return;
+  if(!deployZoneRows(NAVY).includes(r)){ flashBad(r,c); setHint("That unit must stand in your <b>deployment rows</b> (the bottom three)."); return; }
+  if(state.board[r][c]){ flashBad(r,c); return; }
+  const p=mkPiece(k,NAVY);
+  state.board[r][c]=p; state.roster[k]--;
+  // deploy animation
+  anims.push({kind:"deploy", piece:p, x1:c*CELL+CELL/2, y1:r*CELL+CELL/2, t0:now(), dur:420});
+  if(state.roster[k]<=0) state.selectedKind=null;
+  buildTray(); refreshStartBtn(); setHint(deployHint());
+}
+function flashBad(r,c){
+  particles.push({type:"ring", x:c*CELL+CELL/2,y:r*CELL+CELL/2, t0:now(), life:260, r0:CELL*0.1, r1:CELL*0.6});
+}
+function refreshStartBtn(){
+  document.getElementById("btnStart").disabled = !deployComplete();
+  if(deployComplete()) setStatus('Fleet deployed. <span class="nv">Sound the charge when ready, Captain.</span>');
+}
+
+/* ---------- Battle: player input ---------- */
+function onBattleTap({r,c}){
+  const p=state.board[r][c];
+  if(state.selectedSq){
+    // try move to legal
+    if(state.legal.some(([mr,mc])=>mr===r&&mc===c)){
+      doMove(state.selectedSq, {r,c}, NAVY, ()=>{ endTurn(NAVY); });
+      state.selectedSq=null; state.legal=[]; return;
+    }
+    // reselect own piece
+    if(p&&p.side===NAVY){ selectForMove(r,c); return; }
+    state.selectedSq=null; state.legal=[]; return;
+  }
+  if(p&&p.side===NAVY){ selectForMove(r,c); }
+}
+function selectForMove(r,c){
+  state.selectedSq={r,c}; state.legal=genMoves(state.board,r,c); sfx.click();
+}
+
+/* ---------- Execute a move with animation + bomb resolution ---------- */
+function doMove(from,to,side,after){
+  state.busy=true;
+  const p=state.board[from.r][from.c];
+  const captured=state.board[to.r][to.c];
+  state.board[from.r][from.c]=null;
+  const x0=from.c*CELL+CELL/2, y0=from.r*CELL+CELL/2;
+  const x1=to.c*CELL+CELL/2, y1=to.r*CELL+CELL/2;
+  if(captured){
+    anims.push({kind:"capfade", piece:captured, x:x1, y:y1, t0:now(), dur:320});
+  }
+  anims.push({kind:"move", piece:p, x0,y0,x1,y1, t0:now(), dur:280, done:()=>{
+    if(captured) sfx.cap(); else sfx.move();
+    state.board[to.r][to.c]=p;
+    // bomb check — enemy mine on destination?
+    const enemy=1-side;
+    if(hasBomb(enemy,to.r,to.c)){
+      state.bombs[enemy]=state.bombs[enemy].filter(b=>!(b.r===to.r&&b.c===to.c));
+      detonate(to.r,to.c, ()=>finishMove(side,after));
+    } else {
+      finishMove(side,after);
+    }
+  }});
+}
+function detonate(r,c,after){
+  explode(r,c);
+  // destroy piece on r,c and all 8 neighbours
+  const dead=[];
+  const sweep=[[0,0],...DIRS8];
+  for(const [dr,dc] of sweep){
+    const nr=r+dr,nc=c+dc;
+    if(inb(nr,nc)&&state.board[nr][nc]){ dead.push({p:state.board[nr][nc],r:nr,c:nc}); }
+  }
+  for(const d of dead){
+    state.board[d.r][d.c]=null;
+    anims.push({kind:"capfade", piece:d.p, x:d.c*CELL+CELL/2, y:d.r*CELL+CELL/2, t0:now()+80, dur:300});
+  }
+  // chain: if a neighbouring cell also had a hidden mine (either side), chain it
+  let chained=false;
+  for(const [dr,dc] of DIRS8){
+    const nr=r+dr,nc=c+dc;
+    for(const s of [NAVY,CRIMSON]){
+      if(hasBomb(s,nr,nc)){
+        state.bombs[s]=state.bombs[s].filter(b=>!(b.r===nr&&b.c===nc));
+        chained=true;
+        setTimeout(()=>detonate(nr,nc,()=>{}),180);
+      }
+    }
+  }
+  setTimeout(after, 620);
+}
+function finishMove(side,after){
+  // check victory (admiral captured / destroyed)
+  const enemyKing=findAdmiral(state.board,1-side);
+  const myKing=findAdmiral(state.board,side);
+  if(!enemyKing){ gameOver(side); return; }
+  if(!myKing){ gameOver(1-side); return; } // blew up own admiral in a chain
+  state.busy=false;
+  after && after();
+}
+
+/* ---------- Turn flow ---------- */
+function endTurn(justMoved){
+  if(state.phase!=="battle") return;
+  state.turn=1-justMoved;
+  if(state.turn===CRIMSON){
+    setStatus('<span class="cr">The enemy fleet manoeuvres…</span>');
+    setTimeout(aiMove, 480);
+  } else {
+    setStatus('<span class="nv">Your command, Captain.</span> Select a unit to move.');
+  }
+}
+
+/* ---------- AI (heuristic + shallow search, unaware of hidden mines) ---------- */
+function allMoves(board,side){
+  const list=[];
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const p=board[r][c];
+    if(p&&p.side===side){ for(const m of genMoves(board,r,c)) list.push({from:{r,c},to:{r:m[0],c:m[1]}}); }
+  }
+  return list;
+}
+function evaluate(board,side){ // from 'side' perspective
+  let s=0;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const p=board[r][c]; if(!p) continue;
+    let v=PIECES[p.kind].value;
+    // mild centralisation + advance bonus
+    const adv = p.side===CRIMSON ? r : (N-1-r);
+    v += adv*0.04;
+    const centre = 1-(Math.abs(c-(N-1)/2)/((N-1)/2));
+    v += centre*0.05;
+    s += (p.side===side? v : -v);
+  }
+  return s;
+}
+function cloneBoard(board){ return board.map(row=>row.map(x=>x)); }
+function applySim(board,mv){
+  const b=cloneBoard(board);
+  b[mv.to.r][mv.to.c]=b[mv.from.r][mv.from.c];
+  b[mv.from.r][mv.from.c]=null;
+  return b;
+}
+function negamax(board,side,depth,alpha,beta){
+  const k=findAdmiral(board,side); const ek=findAdmiral(board,1-side);
+  if(!ek) return 9999+depth;
+  if(!k) return -9999-depth;
+  if(depth===0) return evaluate(board,side);
+  let best=-1e9;
+  const moves=allMoves(board,side);
+  // order: captures first
+  moves.sort((a,b)=>(board[b.to.r][b.to.c]?1:0)-(board[a.to.r][a.to.c]?1:0));
+  for(const mv of moves){
+    const nb=applySim(board,mv);
+    const sc=-negamax(nb,1-side,depth-1,-beta,-alpha);
+    if(sc>best) best=sc;
+    if(best>alpha) alpha=best;
+    if(alpha>=beta) break;
+  }
+  return best;
+}
+function aiMove(){
+  if(state.phase!=="battle") return;
+  const moves=allMoves(state.board,CRIMSON);
+  if(moves.length===0){ gameOver(NAVY); return; }
+  let best=null, bestScore=-1e9;
+  // depth 2 search; add small randomness to ties for variety
+  for(const mv of moves){
+    const nb=applySim(state.board,mv);
+    let sc=-negamax(nb,NAVY,2,-1e9,1e9);
+    sc += Math.random()*0.08;
+    if(sc>bestScore){ bestScore=sc; best=mv; }
+  }
+  doMove(best.from,best.to,CRIMSON,()=>{ endTurn(CRIMSON); });
+}
+
+/* ---------- AI deployment ---------- */
+function aiDeploy(){
+  const rows=deployZoneRows(CRIMSON); // 0,1,2
+  // place admiral on back rank centre-ish, then strong pieces around, fill rest
+  const cells=[];
+  for(const r of rows)for(let c=0;c<N;c++) cells.push({r,c});
+  // prefer back rank for admiral & heavy, front rows for skirmishers
+  function place(kind,prefRow){
+    const pool=cells.filter(x=>!state.board[x.r][x.c]);
+    pool.sort((a,b)=>Math.abs(a.r-prefRow)-Math.abs(b.r-prefRow)
+       + (Math.abs(a.c-4.5)-Math.abs(b.c-4.5))*0.1 + (Math.random()-0.5)*0.6);
+    const cell=pool[0]; if(cell) state.board[cell.r][cell.c]=mkPiece(kind,CRIMSON);
+  }
+  place("admiral",0); place("flagship",0); place("manowar",1); place("navigator",1);
+  place("dragoon",1); place("serpent",1); place("bombardier",2); place("harpooner",2);
+  place("corsair",2); place("bosun",2); place("marine",2); place("monkey",2);
+  // bombs: lay in own waters / no-man's land (rows 0..6), avoid occupied
+  let laid=0, guard=0;
+  while(laid<BOMBS_PER_SIDE && guard++<400){
+    const r=Math.floor(Math.random()*7), c=Math.floor(Math.random()*N); // rows 0..6
+    if(state.board[r][c]||hasBomb(CRIMSON,r,c)) continue;
+    // bias toward the contested middle rows 3-6
+    if(r<3 && Math.random()<0.5) continue;
+    state.bombs[CRIMSON].push({r,c}); laid++;
+  }
+}
+
+/* ---------- Start / end ---------- */
+function startBattle(){
+  if(!deployComplete()) return;
+  sfx.boom(); // opening salvo
+  shake=10; flash=0.3;
+  aiDeploy();
+  state.phase="battle"; state.selectedKind=null;
+  trayEl.style.display="none";
+  document.getElementById("btnStart").style.display="none";
+  document.getElementById("btnAuto").style.display="none";
+  setHint('Capture the enemy <b>Admiral</b> to win. Beware — both fleets have buried <b>sea mines</b>; the enemy’s are hidden until they roar. A blast levels its square and every neighbour, friend or foe.');
+  setStatus('<span class="nv">Battle is joined! Your move, Captain.</span>');
+}
+function gameOver(winnerSide){
+  state.phase="over"; state.winner=winnerSide; state.busy=false; state.selectedSq=null;
+  const win=winnerSide===NAVY;
+  setTimeout(()=>{
+    document.getElementById("bTitle").textContent = win? "Victory!" : "Colours Struck";
+    document.getElementById("bText").innerHTML = win
+      ? "The enemy Admiral is taken. The sea is yours, Captain — history will remember this broadside."
+      : "Your Admiral has fallen and your colours are struck. Regroup and sail again.";
+    document.getElementById("banner").style.display="flex";
+    win?sfx.win():sfx.lose();
+  }, win?300:300);
+  setStatus(win?'<span class="nv">★ Victory — the enemy Admiral is taken! ★</span>'
+               :'<span class="cr">Defeat — your Admiral has fallen.</span>');
+}
+
+/* ---------- Auto-deploy for the player ---------- */
+function autoDeploy(){
+  if(state.phase!=="deploy") return;
+  // clear current
+  state.board.forEach((row,r)=>row.forEach((_,c)=>{ if(state.board[r][c]&&state.board[r][c].side===NAVY) state.board[r][c]=null; }));
+  state.bombs[NAVY]=[]; state.roster=makeRoster(); state.bombsLeft=BOMBS_PER_SIDE;
+  const rows=deployZoneRows(NAVY); // 7,8,9
+  const seq=[];
+  for(const k of ROSTER_ORDER) for(let i=0;i<PIECES[k].count;i++) seq.push(k);
+  const cells=[]; for(const r of rows)for(let c=0;c<N;c++) cells.push({r,c});
+  // admiral back rank centre
+  const order=seq.slice().sort((a,b)=> (PIECES[b].value)-(PIECES[a].value));
+  // simple: shuffle cells, place admiral at row 9 centre
+  shuffle(cells);
+  // ensure admiral near back centre
+  cells.sort((a,b)=> (Math.abs(a.r-9)+Math.abs(a.c-4.5)) - (Math.abs(b.r-9)+Math.abs(b.c-4.5)));
+  let ci=0;
+  const placeAnimated=(kind,cell,delay)=>{
+    setTimeout(()=>{
+      const p=mkPiece(kind,NAVY); state.board[cell.r][cell.c]=p; state.roster[kind]--;
+      anims.push({kind:"deploy",piece:p,x1:cell.c*CELL+CELL/2,y1:cell.r*CELL+CELL/2,t0:now(),dur:380});
+      buildTray(); refreshStartBtn();
+    },delay);
+  };
+  // place admiral first (most central back), then rest random
+  placeAnimated("admiral",cells[ci++],0);
+  const rest=ROSTER_ORDER.flatMap(k=>Array(PIECES[k].count).fill(k)).filter(k=>k!=="admiral");
+  shuffle(rest);
+  const restCells=cells.slice(ci); shuffle(restCells);
+  rest.forEach((k,i)=> placeAnimated(k,restCells[i],90+i*70));
+  // mines: spread across rows 4-7
+  const mineCells=[];
+  for(let r=4;r<=7;r++)for(let c=0;c<N;c++) mineCells.push({r,c});
+  shuffle(mineCells);
+  for(let i=0;i<BOMBS_PER_SIDE;i++){
+    const cell=mineCells[i];
+    setTimeout(()=>{ state.bombs[NAVY].push(cell); state.bombsLeft--; buildTray(); refreshStartBtn(); sfx.thud(); }, 900+i*120);
+  }
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* ---------- New game ---------- */
+function newGame(){
+  state=freshState();
+  trayEl.style.display="flex";
+  document.getElementById("btnStart").style.display="";
+  document.getElementById("btnAuto").style.display="";
+  document.getElementById("banner").style.display="none";
+  document.getElementById("btnStart").disabled=true;
+  layout(); buildTray();
+  setStatus('<span class="nv">Deploy your fleet, Captain.</span>');
+  setHint(deployHint());
+}
+
+/* ---------- Buttons ---------- */
+document.getElementById("btnStart").addEventListener("click",startBattle);
+document.getElementById("btnNew").addEventListener("click",()=>{ sfx.click(); newGame(); });
+document.getElementById("btnAuto").addEventListener("click",()=>{ sfx.click(); autoDeploy(); });
+document.getElementById("bBtn").addEventListener("click",()=>{ sfx.click(); newGame(); });
+document.getElementById("btnMute").addEventListener("click",e=>{
+  const m=sfx.toggle(); e.target.textContent=m?"🔇":"🔊";
+});
+
+/* ---------- Boot ---------- */
+layout(); newGame(); requestAnimationFrame(draw);
+</script>
+</body>
+</html>
