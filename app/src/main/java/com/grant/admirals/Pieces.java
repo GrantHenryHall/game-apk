@@ -52,9 +52,11 @@ public final class Pieces {
         "Scout — leaps exactly 2 squares diagonally."
     };
 
-    // rough fighting value, used by the enemy admiral's staff (the AI)
+    // rough fighting value, used by the enemy admiral's staff (the AI).
+    // The Admiral is no longer the win condition, so it is valued like the
+    // ordinary 1-step movers — every last unit must be hunted down.
     public static final int[] VALUE = {
-        1000, 90, 50, 48, 30, 11, 11, 42, 40, 18, 20, 20
+        16, 90, 50, 48, 30, 11, 11, 42, 40, 18, 20, 20
     };
 
     static int slideStyle(int t) {

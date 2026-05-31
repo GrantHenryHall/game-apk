@@ -56,6 +56,14 @@ public class Game {
 
     static boolean on(int r, int c) { return r >= 0 && r < N && c >= 0 && c < N; }
 
+    public int count(int who) {
+        int n = 0;
+        for (int r = 0; r < N; r++)
+            for (int c = 0; c < N; c++)
+                if (owner[r][c] == who) n++;
+        return n;
+    }
+
     public int[] findKing(int who) {
         for (int r = 0; r < N; r++)
             for (int c = 0; c < N; c++)
@@ -175,9 +183,11 @@ public class Game {
             }
         }
 
-        // win check
-        if (findKing(HUMAN) == null) res.winner = AI;
-        else if (findKing(AI) == null) res.winner = HUMAN;
+        // win check — last force standing wins (total annihilation)
+        int hc = count(HUMAN), ac = count(AI);
+        if (ac == 0 && hc > 0) res.winner = HUMAN;
+        else if (hc == 0 && ac > 0) res.winner = AI;
+        else if (hc == 0 && ac == 0) res.winner = me; // mutual wipe-out: the mover claims the field
         return res;
     }
 
@@ -285,30 +295,25 @@ public class Game {
 
     /** terminal score from `side` perspective, or MIN_VALUE if not terminal. */
     private int terminal(int side) {
-        boolean human = findKing(HUMAN) != null;
-        boolean ai = findKing(AI) != null;
-        if (human && ai) return Integer.MIN_VALUE;
-        int winner = !ai ? HUMAN : AI;
+        int hc = count(HUMAN), ac = count(AI);
+        if (hc > 0 && ac > 0) return Integer.MIN_VALUE;
+        int winner = (ac == 0) ? HUMAN : AI;   // whoever still has a force standing
         int s = 900000;
         return (winner == side) ? s : -s;
     }
 
-    /** static evaluation from `side` perspective (positive = good for side). */
+    /** static evaluation from `side` perspective (positive = good for side).
+     *  Annihilation game: it's all about material, with a gentle push forward
+     *  so the armies actually close and trade. */
     private int evalFor(int side) {
         int score = 0;
-        int[] ek = findKing(1 - side);
         for (int r = 0; r < N; r++)
             for (int c = 0; c < N; c++) {
                 int o = owner[r][c]; if (o < 0) continue;
                 int v = Pieces.VALUE[type[r][c]];
-                int sign = (o == side) ? 1 : -1;
-                int sub = v;
-                // small pressure bonus: pieces that crowd the enemy king
-                if (ek != null && type[r][c] != Pieces.ADMIRAL) {
-                    int d = Math.abs(r - ek[0]) + Math.abs(c - ek[1]);
-                    sub += Math.max(0, 6 - d);
-                }
-                score += sign * sub;
+                int adv = (o == HUMAN) ? (N - 1 - r) : r;  // 0..9, deeper into enemy ground = better
+                int sub = v + adv;
+                score += (o == side ? 1 : -1) * sub;
             }
         return score;
     }

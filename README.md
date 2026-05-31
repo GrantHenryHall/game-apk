@@ -3,7 +3,7 @@
 A 10×10 turn-based battle game for Android with a 19th‑century, *Master and
 Commander* naval/colonial aesthetic — weathered teak, brass, parchment, the
 Royal Navy in blue against a crimson foe. Deploy your own army piece by piece,
-sow hidden mines, and capture the enemy **Admiral**.
+sow hidden mines, and wipe out the enemy fleet to the **last unit**.
 
 > 📦 **Install it:** download **[`build/BombsAndAdmirals.apk`](build/BombsAndAdmirals.apk)**,
 > copy it to your phone, and tap it. You'll need to allow "install from unknown
@@ -18,8 +18,9 @@ sow hidden mines, and capture the enemy **Admiral**.
    up. When all twelve are down, **Begin the Battle**.
 2. **Fight.** Players alternate one move at a time. Tap one of your units to see
    its legal moves, then tap a destination. Land on an enemy unit to capture it.
-3. **Win** by capturing the enemy Admiral (no check/checkmate — just take the
-   king). Lose your own Admiral and the colours are struck.
+3. **Win by annihilation** — destroy every enemy unit. The side with the last
+   piece standing takes the field. (The Admiral is just another unit now; no
+   king to protect.)
 
 ### Mines
 Hidden from the enemy, a mine **detonates the first enemy unit that steps on
@@ -32,7 +33,7 @@ modest so nothing dominates the line.
 
 | Unit | Move |
 |------|------|
-| **Admiral** *(king)* | 1 square any direction — royal, protect it |
+| **Admiral** *(king)* | 1 square any direction |
 | **Frigate** *(queen)* | slides any distance, any direction |
 | **Bombard** *(rook)* | slides any distance, orthogonally |
 | **Navigator** *(bishop)* | slides any distance, diagonally |

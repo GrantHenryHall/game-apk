@@ -470,8 +470,8 @@ public class GameView extends View {
 
     private void endGame(int w) {
         winner = w; phase = OVER; busy = false;
-        status = (w == Game.HUMAN) ? "VICTORY — the enemy admiral falls!"
-                                   : "DEFEAT — your flagship is taken.";
+        status = (w == Game.HUMAN) ? "VICTORY — the enemy fleet is destroyed!"
+                                   : "DEFEAT — your forces are wiped out.";
         invalidate();
     }
 
@@ -536,8 +536,8 @@ public class GameView extends View {
         text.setColor(0xFFF6ECD2); text.setTextSize(H*0.07f);
         cv.drawText(win ? "VICTORY" : "DEFEAT", W/2f, ribbon.centerY()+H*0.005f, text);
         text.setColor(0xFFE9DCBC); text.setTextSize(H*0.028f);
-        cv.drawText(win ? "The enemy admiral has struck his colours."
-                        : "Your flagship is captured.", W/2f, ribbon.bottom+H*0.05f, text);
+        cv.drawText(win ? "The last enemy unit is sunk — the field is yours."
+                        : "Your last unit has fallen.", W/2f, ribbon.bottom+H*0.05f, text);
         cv.drawText("— tap to play again —", W/2f, ribbon.bottom+H*0.10f, text);
     }
 
