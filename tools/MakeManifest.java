@@ -117,11 +117,11 @@ public class MakeManifest {
     }
 
     public static void main(String[] argv) throws Exception {
-        final String PKG     = "com.grant.admirals";
-        final String CLAZZ   = "com.grant.admirals.MainActivity";
-        final String LABEL   = "Bombs & Admirals";
-        final int    VCODE   = 2;
-        final String VNAME   = "1.1";
+        final String PKG     = "com.broadside.bombs";
+        final String CLAZZ   = "com.broadside.bombs.MainActivity";
+        final String LABEL   = "Broadside & Bombs";
+        final int    VCODE   = 3;
+        final String VNAME   = "1.2";
         final int    MINSDK  = 24;
         final int    TARGET  = 28;
 

@@ -60,9 +60,15 @@ echo "==> build binary AndroidManifest.xml"
 javac -d "$OUT/toolclasses" "$ROOT/tools/MakeManifest.java"
 java -cp "$OUT/toolclasses" MakeManifest "$APKDIR/AndroidManifest.xml"
 
+echo "==> bundle web assets"
+if [ -d "$ROOT/app/src/main/assets" ]; then
+  rm -rf "$APKDIR/assets"
+  cp -r "$ROOT/app/src/main/assets" "$APKDIR/assets"
+fi
+
 echo "==> package unsigned apk"
 UNSIGNED="$OUT/app-unsigned.apk"
-( cd "$APKDIR" && jar --create --no-manifest --file "$UNSIGNED" AndroidManifest.xml classes.dex )
+( cd "$APKDIR" && jar --create --no-manifest --file "$UNSIGNED" AndroidManifest.xml classes.dex assets )
 
 echo "==> ensure debug keystore"
 if [ ! -f "$KEYSTORE" ]; then
@@ -74,7 +80,7 @@ fi
 
 echo "==> sign (v1 + v2)"
 javac -cp "$APKSIG_JAR" -d "$OUT/toolclasses" "$ROOT/tools/SignApk.java"
-FINAL="$ROOT/build/BombsAndAdmirals.apk"
+FINAL="$ROOT/build/BroadsideAndBombs.apk"
 java --add-exports java.base/sun.security.x509=ALL-UNNAMED \
      --add-exports java.base/sun.security.pkcs=ALL-UNNAMED \
      -cp "$OUT/toolclasses:$APKSIG_JAR" SignApk \
