@@ -1,0 +1,10 @@
+# build toolchain cache (re-downloaded by build.sh from Maven Central)
+/.toolcache/
+# intermediate build output
+/build/out/
+/tools/out/
+# signing key (a throwaway debug key is generated on demand)
+/build/debug.p12
+*.class
+/build/apk/
+/build/test-unsigned.apk
