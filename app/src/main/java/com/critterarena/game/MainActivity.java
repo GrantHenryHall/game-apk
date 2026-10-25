@@ -1,16 +1,15 @@
-package com.broadside.bombs;
+package com.critterarena.game;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 /**
- * Broadside & Bombs — a single-Activity WebView shell that loads the bundled,
+ * Critter Arena — a single-Activity WebView shell that loads the bundled,
  * fully offline HTML5 game from the app assets.
  */
 public class MainActivity extends Activity {
@@ -28,10 +27,12 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setMediaPlaybackRequiresUserGesture(false); // allow synthesised WebAudio sfx
-        web.setWebViewClient(new WebViewClient()); // keep navigation inside the WebView
-        web.setBackgroundColor(0xFF0A1014);
+        s.setDomStorageEnabled(true);                 // team + league progress (localStorage)
+        s.setMediaPlaybackRequiresUserGesture(false); // allow synthesised WebAudio music & sfx
+        s.setTextZoom(100);                           // system font scaling must not break the layout
+        web.setWebViewClient(new WebViewClient());    // keep navigation inside the WebView
+        web.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        web.setBackgroundColor(0xFF5FC3FF);
 
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
@@ -56,11 +57,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web != null && web.canGoBack()) {
-            web.goBack();
-        } else {
+        if (web == null) {
             super.onBackPressed();
+            return;
         }
+        // Let the game handle back (pause, close a sheet, return to the menu); exit only from the title.
+        web.evaluateJavascript("(window.__back && window.__back()) ? 'handled' : 'exit'", value -> {
+            if (value == null || !value.contains("handled")) finish();
+        });
     }
 
     @Override

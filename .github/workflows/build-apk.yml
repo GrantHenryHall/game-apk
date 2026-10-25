@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "claude/**"
+      - "ccr-**"
       - "main"
   workflow_dispatch:
 
@@ -42,29 +43,30 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk "out/BroadsideAndBombs.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "out/CritterArena.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BroadsideAndBombs-APK
-          path: out/BroadsideAndBombs.apk
+          name: CritterArena-APK
+          path: out/CritterArena.apk
           if-no-files-found: error
 
       - name: Publish APK to Release (easy phone download)
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-latest
-          name: "Broadside & Bombs — latest APK"
+          tag_name: critter-arena-apk
+          target_commitish: ${{ github.sha }}
+          name: "Critter Arena — latest APK"
           body: |
-            Latest installable debug build of **Broadside & Bombs**.
+            Latest installable debug build of **Critter Arena**, a real-time creature autobattler.
 
             **Install on your phone:**
-            1. Tap `BroadsideAndBombs.apk` below to download.
+            1. Tap `CritterArena.apk` below to download.
             2. Open it; if prompted, allow installing apps from this source.
-            3. Launch **Broadside & Bombs** and sound the charge!
+            3. Launch **Critter Arena** and take on the Sunshine League!
 
-            Built automatically from the latest commit on the development branch.
+            Built automatically from commit ${{ github.sha }}.
           prerelease: true
-          files: out/BroadsideAndBombs.apk
+          files: out/CritterArena.apk

@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.broadside.bombs'
+    namespace 'com.critterarena.game'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.broadside.bombs"
+        applicationId "com.critterarena.game"
         minSdk 26
         targetSdk 34
         versionCode 1

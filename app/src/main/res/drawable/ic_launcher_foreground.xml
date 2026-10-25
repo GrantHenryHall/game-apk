@@ -1,35 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Emberpup, the fire-fox starter, peeking out of the launcher icon -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- bomb body -->
+    <!-- scaled into the adaptive-icon safe zone so round masks keep the ears -->
+    <group
+        android:pivotX="54"
+        android:pivotY="52"
+        android:scaleX="0.8"
+        android:scaleY="0.8">
+
+    <!-- sun glow -->
     <path
-        android:fillColor="#0E1820"
-        android:strokeColor="#C8972E"
+        android:fillColor="#33FFF3A0"
+        android:pathData="M54,58 m-34,0 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0" />
+
+    <!-- ears -->
+    <path
+        android:fillColor="#FF8A3D"
+        android:strokeColor="#2B1F33"
         android:strokeWidth="3"
-        android:pathData="M54,46 m-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0" />
-
-    <!-- highlight -->
+        android:strokeLineJoin="round"
+        android:pathData="M33,48 L28,21 L51,37 Z" />
     <path
-        android:fillColor="#2F5F80"
-        android:pathData="M44,56 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
-
-    <!-- fuse -->
+        android:fillColor="#FFC4C4"
+        android:pathData="M35,43 L32,28 L45,37 Z" />
     <path
-        android:strokeColor="#C8972E"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
+        android:fillColor="#FF8A3D"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M75,48 L80,21 L57,37 Z" />
+    <path
+        android:fillColor="#FFC4C4"
+        android:pathData="M73,43 L76,28 L63,37 Z" />
+
+    <!-- head -->
+    <path
+        android:fillColor="#FF8A3D"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="3"
+        android:pathData="M29,59 a25,24 0 1,0 50,0 a25,24 0 1,0 -50,0" />
+    <path
+        android:fillColor="#FFB070"
+        android:pathData="M36,50 a9,6 0 1,0 18,0 a9,6 0 1,0 -18,0" />
+
+    <!-- flame tuft -->
+    <path
+        android:fillColor="#FFD23F"
+        android:strokeColor="#A3280F"
+        android:strokeWidth="1.5"
+        android:pathData="M54,25 C61,31 61,38 54,40 C47,38 47,31 54,25 Z" />
+
+    <!-- muzzle + nose -->
+    <path
+        android:fillColor="#FFF0D6"
+        android:pathData="M41,68 a13,9 0 1,0 26,0 a13,9 0 1,0 -26,0" />
+    <path
+        android:fillColor="#2B1F33"
+        android:pathData="M50.5,62.5 a3.5,2.6 0 1,0 7,0 a3.5,2.6 0 1,0 -7,0" />
+
+    <!-- eyes -->
+    <path
+        android:fillColor="#1E1626"
+        android:pathData="M40.5,55 a4.5,5.5 0 1,0 9,0 a4.5,5.5 0 1,0 -9,0" />
+    <path
+        android:fillColor="#1E1626"
+        android:pathData="M58.5,55 a4.5,5.5 0 1,0 9,0 a4.5,5.5 0 1,0 -9,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,52.5 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,52.5 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
+
+    <!-- cheeks -->
+    <path
+        android:fillColor="#99FF7A9A"
+        android:pathData="M33,65 a4.5,2.8 0 1,0 9,0 a4.5,2.8 0 1,0 -9,0" />
+    <path
+        android:fillColor="#99FF7A9A"
+        android:pathData="M66,65 a4.5,2.8 0 1,0 9,0 a4.5,2.8 0 1,0 -9,0" />
+
+    <!-- smile -->
+    <path
         android:fillColor="#00000000"
-        android:pathData="M68,30 Q80,22 74,12" />
-
-    <!-- spark -->
-    <path
-        android:fillColor="#F0C95A"
-        android:pathData="M74,12 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
-    <path
-        android:fillColor="#FF9A4C"
-        android:pathData="M74,12 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0" />
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M49,69.5 Q51.5,72.5 54,69.5 Q56.5,72.5 59,69.5" />
+    </group>
 </vector>

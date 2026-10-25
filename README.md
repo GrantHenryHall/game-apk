@@ -1,53 +1,53 @@
-# Broadside &amp; Bombs ⚓💣
+# Critter Arena ☀️
 
-A 10×10 tactical naval war-game with a **Master &amp; Commander** colonial aesthetic —
-think weathered sea-charts, brass medallions and cannon-smoke. Two fleets, hidden
-sea-mines, and one goal: **capture the enemy Admiral.**
+A minimalist **real-time creature autobattler** for Android. Think a sunny-day creature stadium
+crossed with Clash Royale, without the towers: drag cute critters onto the pitch while the
+battle is live, and they fight on their own. **Knock out every creature your rival sends to win.**
 
-Ships as a fully-offline **Android APK** (a WebView shell around a single self-contained
-HTML5/Canvas game) and also runs in any browser by opening `www/index.html`.
+Ships as a fully offline **Android APK** (a WebView shell around an HTML5/Canvas game) and also
+runs in any browser by opening `www/index.html`. Every creature, trainer, effect and sound is
+generated in code: there are no image or audio files.
 
 ## How to play
 
-1. **Deploy your fleet.** You command **12 unique units** — pick one from the tray and
-   tap a square in your three home rows to land it (each arrives with a smoke-and-dust
-   flourish). Or hit **Auto-deploy**.
-2. **Lay your mines.** Bury **5 hidden sea-mines** anywhere in your own waters. They stay
-   invisible to the enemy and detonate when an enemy hull crosses them — levelling the
-   square and every neighbour, friend or foe.
-3. **Sound the charge.** You and the AI move one unit per turn. Take the enemy Admiral —
-   by blade or by blast — to win.
+- Each trainer brings **12 capsules**. Every creature you send out uses one.
+- **Drag a card onto your (blue) half of the arena**, or tap a card and then tap the field.
+- Cards cost **☀ sun energy**, which refills over time (2× speed in the final minute).
+- Creatures march, pick targets and fight automatically. Your decisions are **what, where and when**.
+- A side that's out of capsules with nobody left standing **loses**. If the 3-minute clock runs
+  out, **most KOs wins**; if that's tied, it goes to sudden death (next KO wins).
 
-### The fleet (one of each, no plain chess pieces)
+### Roles
 
-| Unit | Role | Movement |
-|------|------|----------|
-| **Admiral** 👑 | royal (capture to win) | 1 square, any direction |
-| **Flagship** | heavy gun | any distance, 8 directions |
-| **Man-o'-War** | line ship | any distance, ranks &amp; files |
-| **Navigator** | scout | any distance, diagonals |
-| **Dragoon** | marine cavalry | leaps in an L |
-| **Sea Serpent** | beast | up to 2 squares, any direction |
-| **Bombardier** | gunner | up to 2 squares, ranks &amp; files |
-| **Harpooner** | skirmisher | up to 2 squares, diagonals |
-| **Corsair** | raider | 1 diagonal, or leap exactly 2 straight |
-| **Bosun** | officer | 1 square, any direction |
-| **Marine** | infantry | 1 square forward / forward-diagonal |
-| **Powder Monkey** | runner | 1 square, ranks &amp; files |
+| Role | Job |
+|------|-----|
+| Tank | Huge HP, taunts nearby foes into attacking it |
+| Brawler | Sturdy melee damage |
+| Ranged | Fragile, hits from behind the front line |
+| Splash | Area damage, shreds swarms |
+| Support | Heals or shields allies |
+| Assassin | Leaps over the front line onto backliners |
+| Swarm | Many tiny bodies that melt big targets |
+| Legend | Expensive, devastating |
 
-The custom pieces are deliberately short-ranged so the battle stays about position and
-the mines, not one super-piece.
+### Types
+
+Fire › Leaf › Stone › Spark › Water › Fire: each element hits the next one for **×1.5** and the
+previous one for ×0.67. Mystic is strong against Mystic and Dragon; Dragons resist all five
+elements.
+
+### 18 critters, 10 rival teams
+
+Build an 8-card team from 18 creatures, then climb the **Sunshine League**: ten trainers with
+themed teams, from Rookie Pip to Champion Aurora. Win to earn their badges. Quick Battle picks a
+random rival.
 
 ## Getting the APK
 
-Every push to the development branch triggers the **Build Android APK** workflow, which:
-
-- builds an installable **debug APK**, and
-- publishes it to the **`apk-latest`** GitHub Release.
-
-On your phone, open this repo's **Releases**, download `BroadsideAndBombs.apk`, and install
-it (you may need to allow "install unknown apps" for your browser). The APK has no network
-permissions — the whole game is bundled offline.
+Every push to a development branch runs the **Build Android APK** workflow, which builds an
+installable debug APK and publishes it to the **`critter-arena-apk`** GitHub Release. On your
+phone, open this repo's Releases, download `CritterArena.apk` and install it (you may need to
+allow "install unknown apps"). The app needs no network permission.
 
 ## Building locally
 
@@ -60,8 +60,12 @@ gradle assembleDebug
 ## Project layout
 
 ```
-www/index.html         the entire game (Canvas + JS + synthesised audio, no assets)
-app/                   minimal single-Activity WebView wrapper (zero third-party deps)
-  src/main/assets ⇐    www/ is bundled here at build time (see app/build.gradle)
-.github/workflows/     CI that builds the APK and attaches it to a Release
+www/index.html     menus, screens and styling
+www/js/data.js     types, 18 species, 10 league trainers, battle rules
+www/js/sim.js      deterministic real-time battle simulation + trainer AI (also runs in node)
+www/js/art.js      procedural creature / trainer / badge art
+www/js/render.js   stadium, crowd, effects, HUD and hand rendering
+www/js/audio.js    synthesized chiptune music, crowd, creature cries and sfx
+www/js/main.js     app flow, team builder, league, drag-and-drop input
+app/               minimal single-Activity WebView wrapper (zero third-party deps)
 ```
