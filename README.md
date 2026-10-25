@@ -8,13 +8,44 @@ Ships as a fully offline **Android APK** (a WebView shell around an HTML5/Canvas
 runs in any browser. Every creature, trainer, effect and sound is generated in code: there are
 no image or audio files.
 
-There are three editions, kept as separate files and separate apps that install side by side:
+There are four editions, kept as separate files and separate apps that install side by side:
 
 | Edition | Files | App |
 |---------|-------|-----|
 | **Critter Arena** (original) | `www/` | `com.critterarena.game` |
 | **Critter Arena 2** (stadium edition) | `www2/` | `com.critterarena.game2` |
 | **Critter Arena 3** (journey edition) | `www3/` | `com.critterarena.game3` |
+| **Critter Arena 4** (adventure edition) | `www4/` | `com.critterarena.game4` |
+
+## What's new in Critter Arena 4
+
+Critter Arena 4 is built on the Critter Arena 3 code (journey, levels, catching, evolution, the
+stadium) and swaps the journey map for a whole **walkable world**:
+
+- **The Sunshine Region on foot**: 9 towns, 8 routes, Victory Road, the Sunshine Plateau and the
+  Sky Pillar, drawn tile by tile. **Tap** where you want to go, or **hold** your finger down to
+  steer. Hop down one-way ledges, push through tall grass, wander into houses.
+- **Your lead critter follows you** everywhere, hopping along behind. Tap it to say hi.
+- **Trainers who spot you**: walk into a trainer's line of sight and a "!" pops up, they march
+  over and challenge you. Nearly 60 trainers: 27 out on the routes, 2 in every gym, 8 gym leaders,
+  3 rival battles, the Elite and the Champion, then the Hall of Fame.
+- **Battles happen where you are**: wild and route battles are fought in meadows, forests, on the
+  beach, in rocky passes, a starlit grove, a cave or above the clouds, with birdsong instead of a
+  crowd. Gym battles keep the stadium, painted in each gym's colours.
+- **Towns to explore**: Critter Centers (the nurse remembers you, so you wake up there if you black
+  out), Marts, people to chat with, gifts to collect, critters lazing around town, signs, TVs and
+  bookshelves full of trivia.
+- **Prize money and a bag**: win money from trainers and spend it on Capsules, Great Capsules,
+  Ultra Capsules, Rare Candies and Repels. Pick up items lying on the routes. Choose which capsule
+  to throw right from the CATCH button.
+- **Shiny critters**: about 1 in 40 wild critters comes in rare sparkly colours, and keeps them
+  once caught.
+- **Gen-1 style start menu**: Critterdex (with where to find each critter), Team, Bag, trainer
+  card with your badges, money and play time, Save and Options.
+- **New music**: route, forest, cave, Critter Center, gym, trainer, rival, League, Sky Pillar,
+  Champion and Hall of Fame themes, plus footstep bumps, ledge hops, doors and item jingles.
+- **Level-scaled XP**: critters above their opponents' level learn less and ones below catch up
+  faster, so the adventure stays a challenge all the way to the Champion.
 
 ## What's new in Critter Arena 3
 
@@ -99,10 +130,10 @@ random rival.
 
 ## Getting the APK
 
-Every push to a development branch runs the **Build Android APK** workflow. It builds all three
-editions and publishes **Critter Arena 3** to the **`critter-arena-3-apk`** GitHub Release
-(`CritterArena3.apk`). The earlier releases, **`critter-arena-apk`** and
-**`critter-arena-2-apk`**, are left as they were.
+Every push to a development branch runs the **Build Android APK** workflow. It builds all four
+editions and publishes **Critter Arena 4** to the **`critter-arena-4-apk`** GitHub Release
+(`CritterArena4.apk`). The earlier releases, **`critter-arena-apk`**, **`critter-arena-2-apk`**
+and **`critter-arena-3-apk`**, are left as they were.
 On your phone, open this repo's Releases, download the APK and install it (you may need to
 allow "install unknown apps"). The apps need no network permission.
 
@@ -110,6 +141,7 @@ allow "install unknown apps"). The apps need no network permission.
 
 ```bash
 # requires JDK 17 + Android SDK (platform 34, build-tools 34.0.0)
+gradle assembleAdventureDebug # Critter Arena 4 -> app/build/outputs/apk/adventure/debug/
 gradle assembleJourneyDebug   # Critter Arena 3 -> app/build/outputs/apk/journey/debug/
 gradle assembleStadiumDebug   # Critter Arena 2 -> app/build/outputs/apk/stadium/debug/
 gradle assembleClassicDebug   # original        -> app/build/outputs/apk/classic/debug/
@@ -118,6 +150,11 @@ gradle assembleClassicDebug   # original        -> app/build/outputs/apk/classic
 ## Project layout
 
 ```
+www4/              Critter Arena 4: everything in www3/, plus the overworld:
+  js/worldart.js     ground tiles, trees, buildings, interiors and walking trainers
+  js/worlddata.js    the Sunshine Region: maps, buildings, people, trainers, items
+  js/world.js        walking, pathfinding, trainers' sight lines, doors, dialog, start menu
+  js/worldevents.js  nurses, shopkeepers, gifts, the rival, the Hall of Fame
 www3/              Critter Arena 3 (same file layout as www2/, plus the journey, levels, catching)
 www2/              Critter Arena 2 (same file layout as www/, plus evolution, stadium, modes)
 www/index.html     menus, screens and styling
@@ -128,5 +165,6 @@ www/js/render.js   stadium, crowd, effects, HUD and hand rendering
 www/js/audio.js    synthesized chiptune music, crowd, creature cries and sfx
 www/js/main.js     app flow, team builder, league, drag-and-drop input
 app/               minimal single-Activity WebView wrapper (zero third-party deps);
-                   product flavors 'classic' (www/), 'stadium' (www2/) and 'journey' (www3/)
+                   product flavors 'classic' (www/), 'stadium' (www2/), 'journey' (www3/)
+                   and 'adventure' (www4/)
 ```

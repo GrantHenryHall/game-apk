@@ -40,8 +40,8 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build debug APKs (classic, Critter Arena 2, Critter Arena 3)
-        run: gradle assembleClassicDebug assembleStadiumDebug assembleJourneyDebug --no-daemon --stacktrace
+      - name: Build debug APKs (classic, Critter Arena 2, 3 and 4)
+        run: gradle assembleClassicDebug assembleStadiumDebug assembleJourneyDebug assembleAdventureDebug --no-daemon --stacktrace
 
       - name: Collect APKs
         run: |
@@ -49,6 +49,7 @@ jobs:
           cp app/build/outputs/apk/classic/debug/app-classic-debug.apk "out/CritterArena.apk"
           cp app/build/outputs/apk/stadium/debug/app-stadium-debug.apk "out/CritterArena2.apk"
           cp app/build/outputs/apk/journey/debug/app-journey-debug.apk "out/CritterArena3.apk"
+          cp app/build/outputs/apk/adventure/debug/app-adventure-debug.apk "out/CritterArena4.apk"
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
@@ -57,24 +58,24 @@ jobs:
           path: out/*.apk
           if-no-files-found: error
 
-      # Only Critter Arena 3 is published; the earlier editions' releases are left as they were.
-      - name: Publish Critter Arena 3 to its own Release (easy phone download)
+      # Only Critter Arena 4 is published; the earlier editions' releases are left as they were.
+      - name: Publish Critter Arena 4 to its own Release (easy phone download)
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: critter-arena-3-apk
+          tag_name: critter-arena-4-apk
           target_commitish: ${{ github.sha }}
-          name: "Critter Arena 3 — latest APK"
+          name: "Critter Arena 4 — latest APK"
           body: |
-            Latest installable debug build of **Critter Arena 3**: the journey edition. Pick a starter,
-            catch wild critters, level them up, beat 8 gyms and your rival, and become Champion.
-            Installs alongside Critter Arena and Critter Arena 2.
+            Latest installable debug build of **Critter Arena 4**: the adventure edition. Walk a whole
+            sunny region on foot: tall grass, trainers who spot you, towns, shops, gyms and your rival,
+            with your lead critter following behind you. Installs alongside Critter Arena 1, 2 and 3.
 
             **Install on your phone:**
-            1. Tap `CritterArena3.apk` below to download.
+            1. Tap `CritterArena4.apk` below to download.
             2. Open it; if prompted, allow installing apps from this source.
-            3. Launch **Critter Arena 3** and start your journey!
+            3. Launch **Critter Arena 4** and start your adventure!
 
             Built automatically from commit ${{ github.sha }}.
           prerelease: true
-          files: out/CritterArena3.apk
+          files: out/CritterArena4.apk

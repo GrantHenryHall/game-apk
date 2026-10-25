@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Critter Arena 4: a trainer's cap resting on a tuft of tall grass -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.8"
+        android:scaleY="0.8">
+
+        <!-- tall grass -->
+        <path
+            android:fillColor="#45C25A"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="2.5"
+            android:strokeLineJoin="round"
+            android:pathData="M18,90 L24,66 L30,82 L36,60 L42,80 L48,64 L54,80 L60,62 L66,80 L72,64 L78,82 L84,62 L90,90 Z" />
+        <path
+            android:fillColor="#7AD65A"
+            android:pathData="M26,88 L30,78 L34,88 Z M50,88 L54,76 L58,88 Z M74,88 L78,78 L82,88 Z" />
+        <!-- cap crown -->
+        <path
+            android:fillColor="#FF4D5E"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="3"
+            android:strokeLineJoin="round"
+            android:pathData="M28,60 C28,36 40,26 54,26 C68,26 80,36 80,60 Z" />
+        <!-- white front panel -->
+        <path
+            android:fillColor="#F7F4EE"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="2.5"
+            android:strokeLineJoin="round"
+            android:pathData="M40,60 C40,44 46,34 54,34 C62,34 68,44 68,60 Z" />
+        <!-- capsule logo -->
+        <path
+            android:fillColor="#3D8BFF"
+            android:pathData="M47,50 A7,7 0 0,1 61,50 Z" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="2"
+            android:pathData="M47,50 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M47,50 L61,50" />
+        <!-- visor -->
+        <path
+            android:fillColor="#FF4D5E"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="3"
+            android:strokeLineJoin="round"
+            android:pathData="M24,60 Q54,54 88,62 Q86,72 56,72 Q30,72 24,60 Z" />
+        <!-- top button -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="2"
+            android:pathData="M50,26 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+        <!-- shine -->
+        <path
+            android:fillColor="#66FFFFFF"
+            android:pathData="M33,46 C34,38 38,33 43,31 C40,36 38,41 37,47 Z" />
+    </group>
+</vector>

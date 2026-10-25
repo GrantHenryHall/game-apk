@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#5fc3ff">
+<title>Critter Arena 4</title>
+<style>
+  :root {
+    --ink: #2b1f33; --sky: #5fc3ff; --sky-l: #bfe9ff; --sun: #ffd23f; --sun-d: #ff8a1f;
+    --blue: #3d8bff; --blue-d: #1d4fb0; --red: #ff4d5e; --grass: #6fd04a; --panel: rgba(255,255,255,0.95);
+    --font: "Trebuchet MS", "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #5fc3ff; }
+  body { font-family: var(--font); color: var(--ink); -webkit-user-select: none; user-select: none; touch-action: none; }
+  canvas { display: block; }
+  #game, #menubg, #world { position: fixed; left: 0; top: 0; touch-action: none; }
+  #game, #world { display: none; }
+  .screen {
+    position: fixed; inset: 0; display: none; flex-direction: column; align-items: center;
+    padding: calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 14px);
+    overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y;
+  }
+  .screen.on { display: flex; }
+  /* ---- title ---- */
+  #scr-title { justify-content: space-between; }
+  .logo { margin-top: 4vh; width: min(92vw, 440px); filter: drop-shadow(0 6px 0 rgba(29,79,176,0.35)); }
+  .tagline { margin-top: -4px; font-weight: 900; color: #fff; letter-spacing: 2px; font-size: 14px; text-shadow: 0 2px 0 var(--blue-d), 0 0 10px rgba(29,79,176,0.4); text-align: center; }
+  .menu { display: flex; flex-direction: column; gap: 12px; width: min(86vw, 340px); margin-bottom: 2vh; }
+  .btn {
+    font-family: var(--font); font-weight: 900; font-size: 19px; letter-spacing: 1px; color: var(--ink);
+    border: 3px solid var(--ink); border-radius: 16px; padding: 13px 16px; cursor: pointer;
+    background: linear-gradient(180deg, #fff 0%, #e8f3ff 100%);
+    box-shadow: 0 5px 0 var(--ink); transition: transform .06s, box-shadow .06s; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+  .btn.primary { background: linear-gradient(180deg, #fff27a 0%, var(--sun) 55%, #ffb21f 100%); font-size: 23px; }
+  .btn.blue { background: linear-gradient(180deg, #8fc2ff 0%, var(--blue) 100%); color: #fff; text-shadow: 0 2px 0 var(--blue-d); }
+  .btn.red { background: linear-gradient(180deg, #ff9aa5 0%, var(--red) 100%); color: #fff; text-shadow: 0 2px 0 #b0202e; }
+  .btn.small { font-size: 14px; padding: 8px 12px; border-radius: 12px; box-shadow: 0 3px 0 var(--ink); }
+  .btn.small:active { box-shadow: 0 0 0 var(--ink); transform: translateY(3px); }
+  .btn[disabled] { opacity: .45; pointer-events: none; }
+  .ico { width: 26px; height: 26px; display: inline-block; }
+  .row { display: flex; gap: 10px; align-items: center; justify-content: center; }
+  .toggles { display: flex; gap: 10px; justify-content: center; }
+  .badges { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; padding: 8px 10px; background: rgba(255,255,255,0.75); border: 3px solid var(--ink); border-radius: 14px; }
+  .badges canvas { width: 24px; height: 24px; }
+  /* ---- panels & headers ---- */
+  .bar { width: 100%; max-width: 560px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar h2 { flex: 1; margin: 0; font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 1px; text-shadow: 0 3px 0 var(--blue-d), 0 0 2px var(--blue-d); }
+  .back { width: 46px; height: 46px; padding: 0; font-size: 22px; border-radius: 14px; }
+  .panel { width: 100%; max-width: 560px; background: var(--panel); border: 3px solid var(--ink); border-radius: 18px; padding: 12px; box-shadow: 0 5px 0 rgba(43,31,51,0.35); }
+  .panel h3 { margin: 0 0 8px; font-size: 15px; font-weight: 900; letter-spacing: 1px; color: var(--blue-d); text-transform: uppercase; }
+  .muted { color: #5a6170; font-size: 13px; }
+  /* ---- league ---- */
+  .trainers { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 560px; padding-bottom: 20px; }
+  .tr {
+    display: flex; align-items: center; gap: 10px; background: var(--panel); border: 3px solid var(--ink); border-radius: 16px;
+    padding: 8px 10px; box-shadow: 0 4px 0 rgba(43,31,51,0.35); cursor: pointer; position: relative;
+  }
+  .tr:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(43,31,51,0.35); }
+  .tr.locked { opacity: .55; filter: grayscale(.6); }
+  .tr .num { position: absolute; top: -9px; left: -6px; background: var(--sun); border: 2.5px solid var(--ink); border-radius: 10px; font-weight: 900; font-size: 12px; padding: 1px 7px; }
+  .tr canvas.face { width: 64px; height: 64px; border-radius: 14px; background: linear-gradient(180deg, #ffe9ec, #ffd0d6); border: 2.5px solid var(--ink); flex: none; }
+  .tr .info { flex: 1; min-width: 0; }
+  .tr .nm { font-weight: 900; font-size: 18px; }
+  .tr .ti { font-size: 12px; color: #5a6170; font-weight: 700; }
+  .tr .team { display: flex; gap: 1px; margin-top: 3px; }
+  .tr .team canvas { width: 26px; height: 26px; }
+  .tr .stars { color: #ffb21f; font-size: 13px; letter-spacing: 1px; text-shadow: 0 1px 0 var(--ink); }
+  .tr canvas.bdg { width: 40px; height: 40px; flex: none; }
+  .lock { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 26px; }
+  /* ---- team builder ---- */
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .grid.coll { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+  .slot { position: relative; aspect-ratio: 1 / 1.27; border-radius: 10px; cursor: pointer; }
+  .slot canvas { width: 100%; height: 100%; }
+  .slot.empty { border: 3px dashed rgba(43,31,51,0.35); background: rgba(255,255,255,0.5); }
+  .slot.inteam::after { content: '✓'; position: absolute; right: -5px; bottom: -5px; width: 22px; height: 22px; border-radius: 11px; background: var(--grass); color: #fff; border: 2.5px solid var(--ink); font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .slot.swap { animation: wob .5s infinite alternate; }
+  @keyframes wob { from { transform: rotate(-2deg); } to { transform: rotate(2deg) translateY(-2px); } }
+  .stat { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+  /* bottom sheet */
+  .sheet-wrap { position: fixed; inset: 0; background: rgba(20,30,60,0.45); display: none; align-items: flex-end; justify-content: center; z-index: 20; }
+  .sheet-wrap.on { display: flex; }
+  .sheet { width: 100%; max-width: 560px; background: #fff; border: 3px solid var(--ink); border-bottom: none; border-radius: 22px 22px 0 0; padding: 14px 16px calc(env(safe-area-inset-bottom) + 16px); max-height: 92vh; overflow-y: auto; }
+  .sheet .top { display: flex; gap: 12px; align-items: center; }
+  .sheet canvas.big { width: 132px; height: 132px; border-radius: 18px; border: 3px solid var(--ink); flex: none; }
+  .sheet h4 { margin: 0; font-size: 24px; font-weight: 900; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 900; color: #fff; border: 2px solid var(--ink); margin: 2px 3px 2px 0; }
+  .bars { margin-top: 10px; }
+  .sbar { display: grid; grid-template-columns: 74px 1fr 46px; gap: 8px; align-items: center; font-size: 13px; font-weight: 800; margin: 5px 0; }
+  .sbar .tk { height: 10px; border-radius: 6px; background: #e3e8f0; border: 2px solid var(--ink); overflow: hidden; }
+  .sbar .tk i { display: block; height: 100%; }
+  .desc { font-size: 14px; line-height: 1.45; margin: 10px 0; }
+  .matchups { font-size: 13px; line-height: 1.6; }
+  /* ---- vs ---- */
+  #scr-vs { justify-content: flex-start; }
+  .vs-top { width: 100%; max-width: 560px; display: flex; align-items: flex-end; gap: 8px; }
+  .vs-top canvas { width: 130px; height: 150px; flex: none; }
+  .bubble { flex: 1; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 12px; font-size: 15px; font-weight: 700; line-height: 1.4; position: relative; margin-bottom: 40px; box-shadow: 0 4px 0 rgba(43,31,51,0.3); }
+  .bubble::before { content: ''; position: absolute; left: -14px; bottom: 16px; border: 9px solid transparent; border-right: 12px solid var(--ink); }
+  .bubble b { color: var(--red); }
+  .vs-mark { font-size: 44px; font-weight: 900; color: var(--sun); text-shadow: 0 4px 0 var(--ink), 0 0 2px var(--ink); margin: 6px 0; letter-spacing: 2px; }
+  .mini8 { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
+  .mini8 canvas { width: 100%; aspect-ratio: 1; }
+  /* ---- help ---- */
+  .help p, .help li { font-size: 14px; line-height: 1.5; margin: 4px 0; }
+  .help ul { padding-left: 18px; margin: 4px 0; }
+  .help .sec { margin-bottom: 12px; }
+  .cyc { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 6px 0; font-weight: 900; }
+  .roleln { display: flex; gap: 8px; align-items: flex-start; margin: 5px 0; font-size: 13px; line-height: 1.35; }
+  .roleln .sw { width: 64px; flex: none; text-align: center; padding: 2px 0; border-radius: 6px; border: 2px solid var(--ink); font-weight: 900; font-size: 11px; }
+  /* ---- overlays ---- */
+  .overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30; background: rgba(20,30,60,0.5); padding: 20px; }
+  .overlay.on { display: flex; }
+  .card {
+    width: 100%; max-width: 360px; background: #fff; border: 3px solid var(--ink); border-radius: 22px; padding: 18px; text-align: center;
+    box-shadow: 0 8px 0 rgba(43,31,51,0.4); animation: popin .35s cubic-bezier(.2,1.6,.4,1);
+  }
+  @keyframes popin { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .card h2 { margin: 0 0 4px; font-size: 38px; font-weight: 900; letter-spacing: 2px; }
+  .card .quote { font-size: 15px; font-weight: 700; margin: 8px 0 12px; padding: 10px; border: 2.5px solid var(--ink); border-radius: 12px; background: #f3f8ff; text-align: left; }
+  .card .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0 14px; }
+  .card .stats div { background: #eef4fb; border-radius: 10px; padding: 6px; font-size: 12px; font-weight: 800; color: #5a6170; }
+  .card .stats b { display: block; font-size: 20px; color: var(--ink); }
+  .card .btns { display: flex; flex-direction: column; gap: 10px; }
+  .card canvas.badge-big { width: 96px; height: 96px; margin: 0 auto; display: block; animation: spinin 1s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes spinin { from { transform: rotate(-200deg) scale(0); } to { transform: rotate(0) scale(1); } }
+  #pausebtn {
+    position: fixed; z-index: 10; display: none; width: 40px; height: 40px; border-radius: 12px; padding: 0;
+    border: 3px solid var(--ink); background: rgba(255,255,255,0.92); box-shadow: 0 3px 0 var(--ink); font-weight: 900; font-size: 15px; color: var(--ink);
+  }
+  #pausebtn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+  /* ---- v2 ---- */
+  .two { display: flex; gap: 10px; }
+  .two .btn { flex: 1; font-size: 17px; padding: 12px 8px; }
+  .ed2 { display: inline-block; margin-left: 6px; padding: 0 12px; border-radius: 14px; background: #ff4d5e; color: #fff; border: 3px solid var(--ink); font-size: 20px; font-weight: 900; box-shadow: 0 3px 0 var(--ink); transform: rotate(-6deg); vertical-align: middle; }
+  .slot.locked canvas { filter: brightness(0) opacity(.28); }
+  .slot.locked::after { content: '?'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 var(--ink), 0 0 2px var(--ink); }
+  .formtog { display: flex; gap: 6px; margin-top: 8px; }
+  .formtog .btn { flex: 1; font-size: 13px; padding: 6px; }
+  .formtog .btn.on { background: linear-gradient(180deg, #fff27a, var(--sun)); }
+  /* bracket */
+  .bracket { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 6px; align-items: center; }
+  .bracket { align-items: stretch; }
+  .rnd-wrap { display: flex; flex-direction: column; }
+  .rnd-wrap h4 { margin: 0 0 4px; font-size: 10px; font-weight: 900; color: #5a6170; letter-spacing: 1px; text-align: center; }
+  .rnd { display: flex; flex-direction: column; gap: 8px; justify-content: space-around; flex: 1; }
+  .match { border: 2.5px solid var(--ink); border-radius: 10px; background: #fff; overflow: hidden; }
+  .match.mine { box-shadow: 0 0 0 3px var(--sun); }
+  .match .tm { display: flex; align-items: center; gap: 4px; padding: 3px 5px; font-size: 12px; font-weight: 800; min-height: 28px; }
+  .match .tm + .tm { border-top: 1.5px solid #dfe6ef; }
+  .match .tm canvas { width: 22px; height: 22px; flex: none; }
+  .match .tm.win { background: #fff6c2; }
+  .match .tm.lose { opacity: .45; text-decoration: line-through; }
+  .match .tm.you { color: var(--blue-d); }
+  .match .w { display: block; text-align: center; font-size: 11px; font-weight: 900; background: #e9f3ff; border-top: 1.5px solid #dfe6ef; padding: 3px; cursor: pointer; color: var(--blue-d); }
+  .trophy { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .trophy canvas { width: 90px; height: 90px; }
+  /* watch picker */
+  .picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .pick { border: 2.5px solid var(--ink); border-radius: 12px; background: #fff; text-align: center; padding: 3px 2px; cursor: pointer; font-size: 10px; font-weight: 900; }
+  .pick canvas { width: 100%; aspect-ratio: 1; display: block; }
+  .pick.a { box-shadow: 0 0 0 3px var(--blue); background: #e5f0ff; }
+  .pick.b { box-shadow: 0 0 0 3px var(--red); background: #ffe5e8; }
+  .reward { display: flex; align-items: center; gap: 10px; background: #fff6c2; border: 2.5px solid var(--ink); border-radius: 12px; padding: 8px; margin: 8px 0; text-align: left; font-weight: 800; font-size: 14px; }
+  .reward canvas { width: 64px; height: 64px; flex: none; animation: spinin .9s cubic-bezier(.2,1.4,.4,1); }
+  /* ---- the professor's intro ---- */
+  #scr-intro { padding: 0; }
+  #intro-cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  .intro-ui { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 160px); display: none; flex-direction: column; align-items: center; gap: 10px; padding: 0 18px; z-index: 2; }
+  .intro-ui.on { display: flex; }
+  .intro-ui input { font-family: monospace; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; text-align: center; width: min(80vw, 300px); padding: 10px; border: 3px solid var(--ink); border-radius: 12px; background: #fbfbf4; }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  /* ---- the adventure: bag, mart, trainer card, critterdex, hall of fame ---- */
+  .bagrow { display: flex; align-items: center; gap: 10px; padding: 8px; border: 2.5px solid var(--ink); border-radius: 12px; margin: 6px 0; background: #fbfbf4; text-align: left; }
+  .bagrow.none { opacity: .55; }
+  .bagrow canvas { width: 44px; height: 44px; flex: none; }
+  .bagrow .bi { flex: 1; font-size: 15px; }
+  .bagrow .bi .muted { font-size: 12px; }
+  .bagrow .cnt { font-weight: 900; color: #1d4fb0; }
+  .bagrow .buy { display: flex; flex-direction: column; gap: 6px; }
+  .pickgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .pk { border: 2.5px solid var(--ink); border-radius: 12px; padding: 6px; text-align: center; font-weight: 900; font-size: 12px; background: #fbfbf4; cursor: pointer; }
+  .pk canvas { width: 48px; height: 48px; display: block; margin: 0 auto; }
+  .tcard { border: 3px solid var(--ink); border-radius: 16px; background: linear-gradient(160deg, #fff6c2, #ffe3a8); padding: 12px; }
+  .tc-top { display: flex; gap: 12px; align-items: center; text-align: left; }
+  .tc-top canvas { width: 90px; height: 110px; background: rgba(255,255,255,0.6); border-radius: 12px; border: 2.5px solid var(--ink); flex: none; }
+  .tc-name { font-weight: 900; font-size: 22px; letter-spacing: 2px; }
+  .tc-badges { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; margin-top: 10px; background: rgba(255,255,255,0.7); border-radius: 10px; padding: 6px; border: 2px solid var(--ink); }
+  .tc-badges canvas { width: 100%; height: auto; }
+  .dexlist { display: flex; flex-direction: column; gap: 6px; }
+  .dx { display: flex; gap: 10px; align-items: center; border: 2.5px solid var(--ink); border-radius: 12px; padding: 6px 8px; background: #f4f6fa; text-align: left; }
+  .dx.has { background: #fbfbf4; cursor: pointer; }
+  .dx canvas { width: 56px; height: 56px; flex: none; }
+  .dx .dxi { font-size: 14px; }
+  .dx .dxi .muted { font-size: 11px; }
+  .dx .got { color: #ff4d5e; font-size: 12px; }
+  .prize { font-weight: 800; margin: 6px 0; color: #1d4fb0; }
+  .prize.lost { color: #b0202e; }
+  .hof { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0; }
+  .hof > div { width: 76px; text-align: center; font-weight: 900; font-size: 11px; }
+  .hof canvas { width: 64px; height: 64px; display: block; margin: 0 auto; animation: spinin .9s cubic-bezier(.2,1.4,.4,1); }
+  .lvtag { position: absolute; left: 4px; top: 4px; background: #2b1f33; color: #fff; font-size: 10px; font-weight: 900; padding: 1px 5px; border-radius: 6px; }
+  .xprow { display: flex; align-items: center; gap: 8px; margin: 5px 0; text-align: left; }
+  .xprow canvas { width: 40px; height: 40px; flex: none; }
+  .xprow .nm { font-weight: 900; font-size: 13px; min-width: 84px; }
+  .xpbar { flex: 1; height: 9px; border-radius: 5px; background: #e3e8f0; border: 2px solid var(--ink); overflow: hidden; }
+  .xpbar i { display: block; height: 100%; background: linear-gradient(90deg, #3d8bff, #7fd3ff); transition: width 1.1s cubic-bezier(.3,.8,.3,1); }
+  .lvup { font-size: 11px; font-weight: 900; color: #ff8a1f; min-width: 64px; text-align: right; }
+  .wildlist { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+  .wildlist div { text-align: center; font-size: 11px; font-weight: 900; }
+  .wildlist canvas { width: 64px; height: 64px; display: block; border-radius: 12px; background: #eef7e8; border: 2.5px solid var(--ink); }
+</style>
+</head>
+<body>
+<canvas id="menubg"></canvas>
+<canvas id="game"></canvas>
+<canvas id="world"></canvas>
+<button id="pausebtn" aria-label="Pause">❚❚</button>
+
+<!-- TITLE -->
+<div class="screen on" id="scr-title">
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <svg class="logo" viewBox="0 0 440 190" role="img" aria-label="Critter Arena">
+      <defs>
+        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff7a8"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff9a1f"/>
+        </linearGradient>
+      </defs>
+      <g font-family="Trebuchet MS, Segoe UI, Roboto, sans-serif" font-weight="900" text-anchor="middle" paint-order="stroke" stroke-linejoin="round">
+        <text x="220" y="86" font-size="84" fill="url(#lg)" stroke="#1d4fb0" stroke-width="16" letter-spacing="2">CRITTER</text>
+        <text x="220" y="168" font-size="84" fill="url(#lg)" stroke="#1d4fb0" stroke-width="16" letter-spacing="6">ARENA</text>
+      </g>
+    </svg>
+    <div class="tagline">★ ADVENTURE EDITION <span class="ed2">4</span> ★</div>
+  </div>
+  <div class="menu">
+    <button class="btn primary" id="b-journey">Start Adventure</button>
+    <div class="two"><button class="btn blue" id="b-cup">Tournament</button><button class="btn blue" id="b-quick">Quick Battle</button></div>
+    <div class="two"><button class="btn" id="b-team">My Team</button><button class="btn" id="b-watch">Watch</button></div>
+    <button class="btn" id="b-help">How to Play</button>
+    <div class="toggles">
+      <button class="btn small" id="b-music">♪ Music: On</button>
+      <button class="btn small" id="b-sfx">🔊 Sound: On</button>
+    </div>
+    <div class="badges" id="badgecase"></div>
+  </div>
+</div>
+
+<!-- LEAGUE -->
+<div class="screen" id="scr-league">
+  <div class="bar"><button class="btn back" data-back>‹</button><h2>Sunshine League</h2></div>
+  <div class="trainers" id="trainers"></div>
+</div>
+
+<!-- TEAM BUILDER -->
+<div class="screen" id="scr-team">
+  <div class="bar"><button class="btn back" data-back>‹</button><h2>My Team</h2></div>
+  <div class="panel">
+    <div class="stat"><h3>Battle team</h3><span class="muted" id="teamstat"></span></div>
+    <div class="grid" id="teamgrid"></div>
+    <div class="muted" id="teamhint" style="margin-top:8px">Tap a creature to see its stats. Your team needs exactly 8.</div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <h3>All critters</h3>
+    <div class="grid coll" id="collgrid"></div>
+  </div>
+  <div style="height:16px;flex:none"></div>
+</div>
+
+<!-- VS -->
+<div class="screen" id="scr-vs">
+  <div class="bar"><button class="btn back" data-back>‹</button><h2 id="vs-title">Battle</h2></div>
+  <div class="vs-top"><canvas id="vs-face" width="260" height="300"></canvas><div class="bubble" id="vs-bubble"></div></div>
+  <div class="panel"><div class="stat"><h3 id="vs-their">Their team</h3><span class="stars" id="vs-stars" style="color:#ffb21f;text-shadow:0 1px 0 var(--ink)"></span></div><div class="mini8" id="vs-theirs"></div></div>
+  <div class="vs-mark">VS</div>
+  <div class="panel"><div class="stat"><h3>Your team</h3><span class="muted" id="vs-avg"></span></div><div class="mini8" id="vs-mine"></div></div>
+  <div class="row" style="margin-top:16px;width:100%;max-width:560px">
+    <button class="btn" id="vs-edit" style="flex:1">Edit Team</button>
+    <button class="btn primary" id="vs-go" style="flex:1.4">Battle!</button>
+  </div>
+</div>
+
+<!-- PROFESSOR INTRO -->
+<div class="screen" id="scr-intro">
+  <canvas id="intro-cv"></canvas>
+  <div class="intro-ui" id="intro-name">
+    <input id="name-in" maxlength="7" autocomplete="off" spellcheck="false">
+    <div class="presets" id="name-presets"></div>
+    <button class="btn primary" id="name-ok" style="width:min(80vw,300px)">OK</button>
+  </div>
+  <div class="intro-ui" id="intro-yesno">
+    <div class="row" style="width:min(86vw,340px)">
+      <button class="btn" id="yn-no" style="flex:1">No</button>
+      <button class="btn primary" id="yn-yes" style="flex:1">Yes!</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOURNAMENT -->
+<div class="screen" id="scr-cup">
+  <div class="bar"><button class="btn back" data-back>‹</button><h2>Sun Cup</h2></div>
+  <div class="panel"><div class="stat"><h3 id="cup-round">Quarter-finals</h3><span class="muted" id="cup-note"></span></div>
+    <div class="bracket" id="bracket"></div></div>
+  <div class="row" style="margin-top:14px;width:100%;max-width:560px" id="cup-actions"></div>
+  <div style="height:16px;flex:none"></div>
+</div>
+
+<!-- WATCH (exhibition) -->
+<div class="screen" id="scr-watch">
+  <div class="bar"><button class="btn back" data-back>‹</button><h2>Watch a Battle</h2></div>
+  <div class="panel"><h3>Blue corner</h3><div class="picker" id="pick-a"></div></div>
+  <div class="vs-mark">VS</div>
+  <div class="panel"><h3>Red corner</h3><div class="picker" id="pick-b"></div></div>
+  <div class="row" style="margin-top:14px;width:100%;max-width:560px">
+    <button class="btn" id="w-rand" style="flex:1">Random</button>
+    <button class="btn primary" id="w-go" style="flex:1.4">Watch!</button>
+  </div>
+  <div style="height:16px;flex:none"></div>
+</div>
+
+<!-- HELP -->
+<div class="screen" id="scr-help">
+  <div class="bar"><button class="btn back" data-back>‹</button><h2>How to Play</h2></div>
+  <div class="panel help">
+    <div class="sec"><h3>The goal</h3>
+      <p>Each trainer carries <b>12 capsules</b>. Every creature you send out uses one. <b>Knock out every creature your rival sends</b> — once they're out of capsules with nobody left standing, you win!</p>
+      <p>If the 3-minute clock runs out, <b>most KOs wins</b>. Tied? <b>Sudden death</b>: the next KO takes it.</p>
+    </div>
+    <div class="sec"><h3>Sending out critters</h3>
+      <ul>
+        <li><b>Drag a card</b> onto your (blue) half of the arena — or tap a card, then tap the field. <b>Hold a card</b> to read what it does.</li>
+        <li>Each card costs <b>☀ sun energy</b>, which refills over time. The last minute runs at <b>2× energy</b>.</li>
+        <li>Creatures fight on their own: they march, pick targets and use their moves automatically. <b>Your job is what, where and when.</b></li>
+        <li>Capsules are limited: cheap cards are quick answers, expensive ones get more out of each capsule.</li>
+      </ul>
+    </div>
+    <div class="sec"><h3>Your adventure</h3>
+      <p>Pick a starter from <b>Prof. Hazel</b>, then explore the <b>Sunshine Region</b> on foot. <b>Tap</b> where you want to go, or <b>hold</b> your finger down to steer. Tap people, signs and items to talk to them or pick them up. Your lead critter follows right behind you!</p>
+      <p><b>Tall grass</b> hides wild critters. <b>Trainers</b> challenge you when you walk into their line of sight, and pay prize money when you win. Spend it at the <b>MART</b> on capsules, Rare Candies and Repels.</p>
+      <p>Beat the <b>8 gym leaders</b>, keep up with your <b>rival</b>, survive <b>Victory Road</b> and challenge the <b>Champion</b>. Talk to the nurse at a <b>Critter Center</b>: if you ever black out, you wake up at the last one you visited.</p>
+      <p><b>Catching:</b> in a wild battle, weaken the big wild critter without knocking it out, then tap <b>CATCH</b>. The lower its HP, the better your odds. Tap the little capsule above the button to switch between Capsules, Great Capsules and Ultra Capsules. Watch out for rare <b>shiny</b> critters with unusual colours!</p>
+      <p><b>Levels:</b> your critters earn XP after every battle (more if they fought) and grow stronger each level. Wild critters and trainers have levels too.</p>
+    </div>
+    <div class="sec"><h3>Lead critter</h3>
+      <p>Every battle opens with both trainers sending out a <b>lead at the same time</b>, Pokémon style. You start with 8 energy: a big lead hits hard but leaves less for your follow-up.</p>
+    </div>
+    <div class="sec"><h3>Evolution</h3>
+      <p>Critters earn XP by fighting. When one is ready, a <b>gold ⬆ badge</b> appears over it. <b>Tap it</b> and spend a little energy to evolve: +40% HP, a 25% heal, +30% power, a bigger body and a new name. Evolving costs no capsule, so it's often better than sending a fresh critter.</p>
+    </div>
+    <div class="sec"><h3>Crowd boost</h3>
+      <p>The crowd gets louder when you score KOs, land super-effective hits and evolve. When your <b>CROWD</b> meter is full, tap it: for 7 seconds your whole team attacks 35% faster and moves 20% faster. Time it for the big clash!</p>
+    </div>
+    <div class="sec"><h3>Roles</h3><div id="help-roles"></div></div>
+    <div class="sec"><h3>Types</h3>
+      <p>Each element is <b>super effective (×1.5)</b> against the next one in the circle, and weak (×0.67) against the one before it:</p>
+      <div class="cyc" id="help-cycle"></div>
+      <p><b>Mystic</b> magic is super effective against Mystic and Dragon. <b>Dragons</b> resist all five elements. <b>Normal</b> is neutral.</p>
+    </div>
+    <div class="sec"><h3>Tips</h3>
+      <ul>
+        <li>Put tanks in front and ranged critters behind them.</li>
+        <li>Splash attacks melt swarms. Swarms melt tanks.</li>
+        <li>Assassins leap over the front line — keep a brawler near your backline.</li>
+        <li>Waiting is a move: let your rival commit, then counter.</li>
+        <li>League trainers further up the ladder draw extra energy from their home crowd.</li>
+        <li>Beat league trainers to win their signature critters for your collection.</li>
+      </ul>
+    </div>
+  </div>
+  <div style="height:16px;flex:none"></div>
+</div>
+
+<!-- creature detail sheet -->
+<div class="sheet-wrap" id="sheet"><div class="sheet" id="sheet-body"></div></div>
+
+<!-- pause -->
+<div class="overlay" id="ov-pause"><div class="card">
+  <h2>Paused</h2>
+  <div class="btns">
+    <button class="btn primary" id="p-resume">Resume</button>
+    <div class="toggles"><button class="btn small" id="p-music"></button><button class="btn small" id="p-sfx"></button></div>
+    <button class="btn red" id="p-quit">Forfeit</button>
+  </div>
+</div></div>
+
+<!-- result -->
+<div class="overlay" id="ov-result"><div class="card" id="result-card"></div></div>
+
+<script src="js/data.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/art.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/render.js"></script>
+<script src="js/worldart.js"></script>
+<script src="js/worlddata.js"></script>
+<script src="js/world.js"></script>
+<script src="js/worldevents.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
