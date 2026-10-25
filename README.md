@@ -8,12 +8,40 @@ Ships as a fully offline **Android APK** (a WebView shell around an HTML5/Canvas
 runs in any browser. Every creature, trainer, effect and sound is generated in code: there are
 no image or audio files.
 
-There are two editions, kept as separate files and separate apps that install side by side:
+There are three editions, kept as separate files and separate apps that install side by side:
 
 | Edition | Files | App |
 |---------|-------|-----|
 | **Critter Arena** (original) | `www/` | `com.critterarena.game` |
 | **Critter Arena 2** (stadium edition) | `www2/` | `com.critterarena.game2` |
+| **Critter Arena 3** (journey edition) | `www3/` | `com.critterarena.game3` |
+
+## What's new in Critter Arena 3
+
+Critter Arena 3 is built on the Critter Arena 2 code (stadium, evolution, crowd boost, Sun Cup)
+and adds a full **journey**:
+
+- **Professor intro**: Prof. Hazel welcomes you in a sunny lab, you name yourself and your
+  rival, and pick a starter from three capsules (Emberpup, Sproutle or Puddlefin). Your rival
+  picks the one that beats yours.
+- **Journey map**: 21 stops from Sunny Town through 6 wild routes (Meadow Path, Mushroom Woods,
+  Seaside Cliffs, Rocky Pass, Starlit Grove, Victory Road), **8 gyms**, three rival battles, the
+  Elite and **Champion Aurora**, then the legendary **Sky Pillar**.
+- **Wild battles and catching**: a big wild critter stomps onto the pitch with its own HP box.
+  Knock its HP into the red without fainting it, then tap **CATCH**. The capsule flies, wobbles
+  up to three times and clicks shut ("GOTCHA!") or bursts open. Caught critters join your team.
+- **Levels and XP**: every critter has a level (up to 40). Battles hand out XP, more for the ones
+  that fought, with level-up bars on the results screen. Trainers and wild critters have levels
+  too, and Quick Battle and the Sun Cup scale to your team's average level.
+- **Small teams that grow**: you start with just your starter and build up to 8 by catching.
+- **Living stadium**: critters show emotes when idle (Zzz, hearts, sparks, bubbles),
+  butterflies drift over the pitch, fireworks go off at kick-off and on victory, and the camera
+  sweeps in on your opponent before each battle.
+- **New music and sounds**: a town theme, a wild-battle theme, capsule wobbles, catches,
+  level-ups and badges.
+- **Autosave**: progress is saved on the device, and the title screen shows your badges and
+  how many critters you've caught.
+- **Tablet friendly**: menus, map and intro scale up on big screens.
 
 ## What's new in Critter Arena 2
 
@@ -71,9 +99,10 @@ random rival.
 
 ## Getting the APK
 
-Every push to a development branch runs the **Build Android APK** workflow. It builds both
-editions and publishes **Critter Arena 2** to the **`critter-arena-2-apk`** GitHub Release
-(`CritterArena2.apk`). The original game's release, **`critter-arena-apk`**, is left as it was.
+Every push to a development branch runs the **Build Android APK** workflow. It builds all three
+editions and publishes **Critter Arena 3** to the **`critter-arena-3-apk`** GitHub Release
+(`CritterArena3.apk`). The earlier releases, **`critter-arena-apk`** and
+**`critter-arena-2-apk`**, are left as they were.
 On your phone, open this repo's Releases, download the APK and install it (you may need to
 allow "install unknown apps"). The apps need no network permission.
 
@@ -81,6 +110,7 @@ allow "install unknown apps"). The apps need no network permission.
 
 ```bash
 # requires JDK 17 + Android SDK (platform 34, build-tools 34.0.0)
+gradle assembleJourneyDebug   # Critter Arena 3 -> app/build/outputs/apk/journey/debug/
 gradle assembleStadiumDebug   # Critter Arena 2 -> app/build/outputs/apk/stadium/debug/
 gradle assembleClassicDebug   # original        -> app/build/outputs/apk/classic/debug/
 ```
@@ -88,6 +118,7 @@ gradle assembleClassicDebug   # original        -> app/build/outputs/apk/classic
 ## Project layout
 
 ```
+www3/              Critter Arena 3 (same file layout as www2/, plus the journey, levels, catching)
 www2/              Critter Arena 2 (same file layout as www/, plus evolution, stadium, modes)
 www/index.html     menus, screens and styling
 www/js/data.js     types, 18 species, 10 league trainers, battle rules
@@ -97,5 +128,5 @@ www/js/render.js   stadium, crowd, effects, HUD and hand rendering
 www/js/audio.js    synthesized chiptune music, crowd, creature cries and sfx
 www/js/main.js     app flow, team builder, league, drag-and-drop input
 app/               minimal single-Activity WebView wrapper (zero third-party deps);
-                   product flavors 'classic' (www/) and 'stadium' (www2/)
+                   product flavors 'classic' (www/), 'stadium' (www2/) and 'journey' (www3/)
 ```

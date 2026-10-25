@@ -40,14 +40,15 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build debug APKs (classic + Critter Arena 2)
-        run: gradle assembleClassicDebug assembleStadiumDebug --no-daemon --stacktrace
+      - name: Build debug APKs (classic, Critter Arena 2, Critter Arena 3)
+        run: gradle assembleClassicDebug assembleStadiumDebug assembleJourneyDebug --no-daemon --stacktrace
 
       - name: Collect APKs
         run: |
           mkdir -p out
           cp app/build/outputs/apk/classic/debug/app-classic-debug.apk "out/CritterArena.apk"
           cp app/build/outputs/apk/stadium/debug/app-stadium-debug.apk "out/CritterArena2.apk"
+          cp app/build/outputs/apk/journey/debug/app-journey-debug.apk "out/CritterArena3.apk"
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
@@ -56,23 +57,24 @@ jobs:
           path: out/*.apk
           if-no-files-found: error
 
-      # Only Critter Arena 2 is published; the original game's release (critter-arena-apk) is left as it was.
-      - name: Publish Critter Arena 2 to its own Release (easy phone download)
+      # Only Critter Arena 3 is published; the earlier editions' releases are left as they were.
+      - name: Publish Critter Arena 3 to its own Release (easy phone download)
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: critter-arena-2-apk
+          tag_name: critter-arena-3-apk
           target_commitish: ${{ github.sha }}
-          name: "Critter Arena 2 — latest APK"
+          name: "Critter Arena 3 — latest APK"
           body: |
-            Latest installable debug build of **Critter Arena 2**: stadium edition with evolution,
-            crowd boosts, tournaments and more. Installs alongside the original Critter Arena.
+            Latest installable debug build of **Critter Arena 3**: the journey edition. Pick a starter,
+            catch wild critters, level them up, beat 8 gyms and your rival, and become Champion.
+            Installs alongside Critter Arena and Critter Arena 2.
 
             **Install on your phone:**
-            1. Tap `CritterArena2.apk` below to download.
+            1. Tap `CritterArena3.apk` below to download.
             2. Open it; if prompted, allow installing apps from this source.
-            3. Launch **Critter Arena 2** and take on the Sunshine League!
+            3. Launch **Critter Arena 3** and start your journey!
 
             Built automatically from commit ${{ github.sha }}.
           prerelease: true
-          files: out/CritterArena2.apk
+          files: out/CritterArena3.apk

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Critter Arena 3: a capture capsule mid-wobble, "Gotcha!" stars above it -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:pivotX="54"
+        android:pivotY="58"
+        android:rotation="-14"
+        android:scaleX="0.78"
+        android:scaleY="0.78">
+
+        <!-- ground shadow -->
+        <path
+            android:fillColor="#3321801F"
+            android:pathData="M30,86 a24,6 0 1,0 48,0 a24,6 0 1,0 -48,0" />
+        <!-- top half (blue) -->
+        <path
+            android:fillColor="#3D8BFF"
+            android:pathData="M28,60 A26,26 0 0,1 80,60 Z" />
+        <path
+            android:fillColor="#A8CCFF"
+            android:pathData="M36,48 a7,4 0 1,0 14,0 a7,4 0 1,0 -14,0" />
+        <!-- bottom half -->
+        <path
+            android:fillColor="#F7F4EE"
+            android:pathData="M28,60 A26,26 0 0,0 80,60 Z" />
+        <!-- band -->
+        <path
+            android:fillColor="#2B1F33"
+            android:pathData="M28,57 L80,57 L80,63 L28,63 Z" />
+        <!-- outline -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="3.5"
+            android:pathData="M28,60 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0" />
+        <!-- button -->
+        <path
+            android:fillColor="#FFD23F"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="3"
+            android:pathData="M45,60 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M50,60 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    </group>
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:translateY="9"
+        android:scaleX="0.78"
+        android:scaleY="0.78">
+        <!-- gotcha stars -->
+        <path
+            android:fillColor="#FFE36A"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="1.6"
+            android:strokeLineJoin="round"
+            android:pathData="M54,8 L57,15 L64,15 L58.5,19.5 L60.5,26.5 L54,22.5 L47.5,26.5 L49.5,19.5 L44,15 L51,15 Z" />
+        <path
+            android:fillColor="#FFE36A"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="1.4"
+            android:strokeLineJoin="round"
+            android:pathData="M30,20 L32,25 L37,25 L33,28 L34.5,33 L30,30 L25.5,33 L27,28 L23,25 L28,25 Z" />
+        <path
+            android:fillColor="#FFE36A"
+            android:strokeColor="#2B1F33"
+            android:strokeWidth="1.4"
+            android:strokeLineJoin="round"
+            android:pathData="M78,20 L80,25 L85,25 L81,28 L82.5,33 L78,30 L73.5,33 L75,28 L71,25 L76,25 Z" />
+    </group>
+</vector>
