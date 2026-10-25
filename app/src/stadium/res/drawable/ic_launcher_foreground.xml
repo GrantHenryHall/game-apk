@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Blazehound, Emberpup's evolution, for Critter Arena 2 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.78"
+        android:scaleY="0.78">
+
+    <!-- flame mane -->
+    <path
+        android:fillColor="#FF4A1F"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="2.5"
+        android:strokeLineJoin="round"
+        android:pathData="M54.0,22.0 Q59.0,27.3 63.2,34.6 Q71.8,31.6 78.4,30.9 Q78.8,38.2 77.4,46.5 Q85.9,49.7 91.4,53.4 Q87.1,59.2 80.6,64.7 Q85.1,72.6 86.9,79.0 Q79.8,80.7 71.4,80.7 Q69.7,89.6 67.0,95.7 Q60.5,92.4 54.0,87.0 Q47.0,92.8 41.0,95.7 Q38.1,89.0 36.6,80.7 Q27.6,80.6 21.1,79.0 Q23.2,72.0 27.4,64.7 Q20.5,58.8 16.6,53.4 Q22.7,49.4 30.6,46.5 Q29.1,37.5 29.6,30.9 Q36.8,31.7 44.8,34.6 Z" />
+    <path
+        android:fillColor="#FFB21F"
+        android:pathData="M59.2,29.4 Q63.1,33.5 65.9,39.2 Q72.7,38.8 77.7,40.0 Q78.0,45.5 76.5,51.7 Q82.0,55.8 85.0,59.9 Q81.7,64.3 76.6,68.1 Q78.2,74.8 77.8,79.8 Q72.4,81.1 66.1,80.7 Q63.0,86.8 59.5,90.5 Q54.6,88.0 49.9,83.7 Q43.7,86.4 38.6,86.9 Q36.4,81.8 35.7,75.5 Q29.1,73.6 24.9,70.7 Q26.5,65.4 30.0,60.1 Q26.2,54.4 24.8,49.5 Q29.4,46.5 35.5,44.7 Q36.3,37.9 38.4,33.2 Q43.9,33.9 49.7,36.4 Z" />
+
+    <!-- ears -->
+    <path
+        android:fillColor="#FF8A3D"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M33,48 L28,21 L51,37 Z" />
+    <path
+        android:fillColor="#FFC4C4"
+        android:pathData="M35,43 L32,28 L45,37 Z" />
+    <path
+        android:fillColor="#FF8A3D"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M75,48 L80,21 L57,37 Z" />
+    <path
+        android:fillColor="#FFC4C4"
+        android:pathData="M73,43 L76,28 L63,37 Z" />
+
+    <!-- head -->
+    <path
+        android:fillColor="#FF8A3D"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="3"
+        android:pathData="M29,59 a25,24 0 1,0 50,0 a25,24 0 1,0 -50,0" />
+    <path
+        android:fillColor="#FFB070"
+        android:pathData="M36,50 a9,6 0 1,0 18,0 a9,6 0 1,0 -18,0" />
+
+    <!-- flame tuft -->
+    <path
+        android:fillColor="#FFD23F"
+        android:strokeColor="#A3280F"
+        android:strokeWidth="1.5"
+        android:pathData="M54,19 C63,28 62,37 54,40 C46,37 45,28 54,19 Z" />
+
+    <!-- muzzle + nose -->
+    <path
+        android:fillColor="#FFF0D6"
+        android:pathData="M41,68 a13,9 0 1,0 26,0 a13,9 0 1,0 -26,0" />
+    <path
+        android:fillColor="#2B1F33"
+        android:pathData="M50.5,62.5 a3.5,2.6 0 1,0 7,0 a3.5,2.6 0 1,0 -7,0" />
+
+    <!-- eyes -->
+    <path
+        android:fillColor="#1E1626"
+        android:pathData="M40.5,55 a4.5,5.5 0 1,0 9,0 a4.5,5.5 0 1,0 -9,0" />
+    <path
+        android:fillColor="#1E1626"
+        android:pathData="M58.5,55 a4.5,5.5 0 1,0 9,0 a4.5,5.5 0 1,0 -9,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,52.5 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,52.5 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" />
+
+    <!-- cheeks -->
+    <path
+        android:fillColor="#99FF7A9A"
+        android:pathData="M33,65 a4.5,2.8 0 1,0 9,0 a4.5,2.8 0 1,0 -9,0" />
+    <path
+        android:fillColor="#99FF7A9A"
+        android:pathData="M66,65 a4.5,2.8 0 1,0 9,0 a4.5,2.8 0 1,0 -9,0" />
+
+    <!-- smile -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M49,69.5 Q51.5,72.5 54,69.5 Q56.5,72.5 59,69.5" />
+
+    <!-- determined brows -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#2B1F33"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M39.5,47.5 L48.5,49.5 M68.5,47.5 L59.5,49.5" />
+    </group>
+</vector>

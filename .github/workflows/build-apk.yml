@@ -40,36 +40,39 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+      - name: Build debug APKs (classic + Critter Arena 2)
+        run: gradle assembleClassicDebug assembleStadiumDebug --no-daemon --stacktrace
 
-      - name: Rename APK
+      - name: Collect APKs
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk "out/CritterArena.apk"
+          cp app/build/outputs/apk/classic/debug/app-classic-debug.apk "out/CritterArena.apk"
+          cp app/build/outputs/apk/stadium/debug/app-stadium-debug.apk "out/CritterArena2.apk"
 
-      - name: Upload APK artifact
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: CritterArena-APK
-          path: out/CritterArena.apk
+          name: CritterArena-APKs
+          path: out/*.apk
           if-no-files-found: error
 
-      - name: Publish APK to Release (easy phone download)
+      # Only Critter Arena 2 is published; the original game's release (critter-arena-apk) is left as it was.
+      - name: Publish Critter Arena 2 to its own Release (easy phone download)
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: critter-arena-apk
+          tag_name: critter-arena-2-apk
           target_commitish: ${{ github.sha }}
-          name: "Critter Arena — latest APK"
+          name: "Critter Arena 2 — latest APK"
           body: |
-            Latest installable debug build of **Critter Arena**, a real-time creature autobattler.
+            Latest installable debug build of **Critter Arena 2**: stadium edition with evolution,
+            crowd boosts, tournaments and more. Installs alongside the original Critter Arena.
 
             **Install on your phone:**
-            1. Tap `CritterArena.apk` below to download.
+            1. Tap `CritterArena2.apk` below to download.
             2. Open it; if prompted, allow installing apps from this source.
-            3. Launch **Critter Arena** and take on the Sunshine League!
+            3. Launch **Critter Arena 2** and take on the Sunshine League!
 
             Built automatically from commit ${{ github.sha }}.
           prerelease: true
-          files: out/CritterArena.apk
+          files: out/CritterArena2.apk

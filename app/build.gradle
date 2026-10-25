@@ -14,10 +14,30 @@ android {
         versionName "1.0"
     }
 
-    // Bundle the web game (../www) directly as Android assets so it runs offline.
+    // Two editions built from the same WebView shell, installable side by side:
+    //   classic -> the original game in ../www  (com.critterarena.game)
+    //   stadium -> Critter Arena 2 in ../www2   (com.critterarena.game2)
+    flavorDimensions.add('edition')
+    productFlavors {
+        classic {
+            dimension 'edition'
+            applicationId "com.critterarena.game"
+        }
+        stadium {
+            dimension 'edition'
+            applicationId "com.critterarena.game2"
+            versionCode 2
+            versionName "2.0"
+        }
+    }
+
+    // Bundle each edition's web game directly as Android assets so it runs offline.
     sourceSets {
-        main {
+        classic {
             assets.srcDirs += ['../www']
+        }
+        stadium {
+            assets.srcDirs += ['../www2']
         }
     }
 
