@@ -12,7 +12,7 @@ class Game {
     this.score = [0, 0]; this.target = o.target || RULES.KO_TARGET;
     this.teams = o.teams; this.demo = !!o.demo;
     this.time = 0; this.state = o.demo ? 'play' : 'intro'; this.introT = o.demo ? 0 : 3.3;
-    this.over = null; this.empty = [0, 0];
+    this.over = null; this.empty = [0, 0]; this.t0 = o.demo ? -99 : 0; this.sandbox = false;
     this.ais = [0, 1].map(s => o.ai[s] == null ? null : new AIPlayer(s, o.teams[s], o.ai[s]));
     this.stats = { dmg: [0, 0], sent: [0, 0], best: {} };
     this.excite = 0;                 // crowd energy, 0..1
@@ -169,7 +169,7 @@ class Game {
       const before = Math.ceil(this.introT); this.introT -= dt;
       const after = Math.ceil(this.introT);
       if (after !== before && after >= 0) this.emit('count', { n: after });
-      if (this.introT <= 0) { this.state = 'play'; this.emit('start'); }
+      if (this.introT <= 0) { this.state = 'play'; this.t0 = this.time; this.emit('start'); }
     }
     if (this.state === 'play') {
       for (const ai of this.ais) if (ai) ai.update(dt, this);
@@ -197,7 +197,7 @@ class Game {
 
   updateUnit(u, dt) {
     u.age += dt; u.st += dt;
-    u.flash = Math.max(0, u.flash - dt * 6);
+    u.flash = Math.max(0, u.flash - dt * 8);
     u.ox = u.oy = u.lift = u.rot = 0; u.sx = u.sy = 1; u.hide = false; u.al = 1; u.pivot = false; u.flip = false;
     u.moving = false;
     if (u.state === 'deploy') { if (u.st >= RULES.DEPLOY) { u.state = 'active'; u.st = 0; } return; }
@@ -233,8 +233,10 @@ class Game {
 
     if (this.over) { if (u.side === this.over.winner) u.lift = Math.abs(Math.sin((u.age + u.seed) * 7)) * 9; return; }
     if (u.stun > 0) { u.stun -= dt; return; }
+    // sparring partner in the creature gallery: stands still and never runs out of health
+    if (u.dummy) { if (u.hp < u.maxHp * .4) u.hp = u.maxHp; u.x = u.home.x; u.y = u.home.y; u.kx = u.ky = 0; return; }
 
-    u.life -= dt;
+    if (!this.sandbox) u.life -= dt;
     const slow = u.chill > 0 ? .62 : 1;
 
     // mid-attack

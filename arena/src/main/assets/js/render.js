@@ -322,7 +322,7 @@ function drawUnit(ctx, G, u, time) {
     ctx.restore();
   };
   ctx.globalAlpha = al; paint();
-  if (u.flash > .05) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * u.flash * .55; paint(); ctx.globalCompositeOperation = 'source-over'; }
+  if (u.flash > .05) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * u.flash * .38; paint(); ctx.globalCompositeOperation = 'source-over'; }
   ctx.globalAlpha = 1;
 
   const top = y - lift - 38 * s;
@@ -368,10 +368,11 @@ function drawUnit(ctx, G, u, time) {
 }
 
 // whole battlefield: ground effects, creatures sorted by depth, air effects
-function drawBattle(ctx, G, time, extra) {
+function drawBattle(ctx, G, time, extra, T) {
   const V = Arena.V, fx = G.fx, sh = fx.shake;
+  T = T || { x: V.fx, y: V.fy, s: V.fs };
   ctx.save();
-  ctx.translate(V.fx + (sh ? rnd(-sh, sh) * .5 : 0), V.fy + (sh ? rnd(-sh, sh) * .5 : 0)); ctx.scale(V.fs, V.fs);
+  ctx.translate(T.x + (sh ? rnd(-sh, sh) * .5 : 0), T.y + (sh ? rnd(-sh, sh) * .5 : 0)); ctx.scale(T.s, T.s);
   fx.drawItems(ctx, true);
   if (extra && extra.ground) extra.ground(ctx);
   const us = G.units.slice().sort((p, q) => (p.y + p.oy) - (q.y + q.oy));

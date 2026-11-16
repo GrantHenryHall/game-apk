@@ -13,4 +13,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "BroadsideBombs"
-include ':app'
+include ':app'      // Broadside & Bombs
+include ':arena'    // Sunlings Arena

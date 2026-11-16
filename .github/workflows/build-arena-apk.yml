@@ -1,0 +1,81 @@
+name: Build Sunlings Arena APK
+
+on:
+  push:
+    branches:
+      - "ccr-**"
+      - "claude/**"
+      - "main"
+    paths:
+      - "arena/**"
+      - "settings.gradle"
+      - "build.gradle"
+      - "gradle.properties"
+      - ".github/workflows/build-arena-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arena-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform & build-tools
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build debug APK
+        run: gradle :arena:assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp arena/build/outputs/apk/debug/arena-debug.apk "out/SunlingsArena.apk"
+          ls -la out
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SunlingsArena-APK
+          path: out/SunlingsArena.apk
+          if-no-files-found: error
+
+      - name: Publish APK to Release (easy phone download)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sunlings-latest
+          name: "Sunlings Arena: latest APK"
+          body: |
+            Latest installable build of **Sunlings Arena**, the real-time creature arena battler.
+
+            **Install on your phone:**
+            1. Tap `SunlingsArena.apk` below to download.
+            2. Open it; if prompted, allow installing apps from this source.
+            3. Launch **Sunlings Arena**, pick a team, and drag your creatures onto the field.
+
+            Built automatically from the latest commit (build #${{ github.run_number }}). New builds install over older ones.
+          prerelease: true
+          files: out/SunlingsArena.apk

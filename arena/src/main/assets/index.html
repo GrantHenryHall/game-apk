@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Sunlings Arena</title>
+<style>
+  :root { --navy: #232a4d; --ink: #1d2347; --sun: #ffd23d; --sun2: #ff9a2e; --sky: #2f9bff; --cream: #fffdf5; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #2f9bff; }
+  body { font-family: "Arial Rounded MT Bold", "Nunito", "Baloo 2", "Trebuchet MS", "Segoe UI", Roboto, system-ui, sans-serif; font-weight: 900; color: var(--navy);
+         -webkit-user-select: none; user-select: none; touch-action: none; overscroll-behavior: none; }
+  #cv { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #ui { position: fixed; inset: 0; pointer-events: none; }
+  .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding-top: var(--safe, 0px); }
+  .screen.on { display: flex; }
+  .screen.solid { pointer-events: auto; background: linear-gradient(#38a4ffee, #8fd6ffee 55%, #c9f0ffee); }
+  .screen.dim { pointer-events: auto; background: rgba(24, 30, 66, .62); justify-content: center; }
+  .col { width: 36rem; max-width: 100%; display: flex; flex-direction: column; align-items: stretch; padding: 0 1.2rem; flex: 0 0 auto; }
+  .grow { flex: 1 1 auto; min-height: 0; }
+  .col.grow { flex: 1 1 0; min-height: 0; }
+  .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+
+  .outline { color: #fff; text-shadow: -.2rem 0 var(--navy), .2rem 0 var(--navy), 0 -.2rem var(--navy), 0 .2rem var(--navy), -.15rem -.15rem var(--navy), .15rem -.15rem var(--navy), -.15rem .15rem var(--navy), .15rem .15rem var(--navy), 0 .45rem 0 var(--navy); }
+  h2 { font-size: 2.3rem; margin: 2.2rem 0 1.2rem; text-align: center; letter-spacing: .03em; }
+  #lg-title { font-size: 1.75rem; white-space: nowrap; }
+  h3 { font-size: 1.5rem; margin: 0; }
+  p { margin: 0; }
+
+  .logo { margin-top: 3.2rem; text-align: center; pointer-events: none; }
+  .logo .l1 { font-size: 5.6rem; line-height: 1; letter-spacing: .02em; color: var(--sun);
+    text-shadow: -.3rem 0 var(--navy), .3rem 0 var(--navy), 0 -.3rem var(--navy), 0 .3rem var(--navy), -.22rem -.22rem var(--navy), .22rem -.22rem var(--navy), -.22rem .22rem var(--navy), .22rem .22rem var(--navy), 0 .7rem 0 var(--navy), 0 1rem 1.2rem rgba(20, 30, 80, .35); }
+  .logo .l2 { display: inline-block; margin-top: 1.1rem; font-size: 1.55rem; letter-spacing: .32em; padding: .45rem 1rem .45rem 1.3rem; border-radius: 2rem; background: var(--navy); color: #fff; }
+
+  .panel { background: var(--cream); border: .3rem solid var(--navy); border-radius: 1.6rem; box-shadow: 0 .5rem 0 var(--navy); padding: 1.2rem; pointer-events: auto; }
+  .panel.bottom { margin-bottom: 1.6rem; }
+  .row { display: flex; gap: .8rem; margin-top: .8rem; }
+  .row > * { flex: 1 1 0; }
+
+  .btn { font: inherit; font-size: 1.5rem; color: var(--navy); background: var(--sun); border: .3rem solid var(--navy); border-radius: 1.2rem; padding: 1rem .6rem;
+         box-shadow: 0 .45rem 0 var(--navy); letter-spacing: .03em; cursor: pointer; touch-action: manipulation; }
+  .btn:active { transform: translateY(.3rem); box-shadow: 0 .15rem 0 var(--navy); }
+  .btn.big { font-size: 2.1rem; padding: 1.25rem .6rem; background: linear-gradient(#ffe266, #ffc61a); }
+  .btn.blue { background: #7fd3ff; }
+  .btn.green { background: #7fe38a; }
+  .btn.ghost { background: #fff; font-size: 1.05rem; padding: .75rem .3rem; box-shadow: 0 .3rem 0 var(--navy); }
+  .btn.small { font-size: 1.2rem; padding: .7rem .6rem; }
+
+  /* team picker */
+  .teams { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; padding-bottom: 1.4rem; }
+  .team { display: flex; align-items: center; gap: .7rem; padding: .7rem; background: #fff; border: .3rem solid var(--navy); border-radius: 1.2rem; box-shadow: 0 .4rem 0 var(--navy); font: inherit; font-size: 1.25rem; color: var(--navy); text-align: left; }
+  .team:active { transform: translateY(.3rem); box-shadow: 0 .1rem 0 var(--navy); }
+  .team img { width: 3.8rem; height: 3.8rem; flex: none; }
+  .team small { display: block; font-size: .95rem; opacity: .65; margin-top: .15rem; }
+
+  /* league table */
+  table { width: 100%; border-collapse: separate; border-spacing: 0 .28rem; font-size: 1.22rem; }
+  th { font-size: .95rem; opacity: .6; padding: 0 .4rem .1rem; text-align: center; }
+  td { background: #fff; padding: .4rem .4rem; text-align: center; }
+  td:first-child { border-radius: .8rem 0 0 .8rem; width: 2.4rem; }
+  td:last-child { border-radius: 0 .8rem .8rem 0; }
+  td.nm { text-align: left; }
+  td img { width: 2.3rem; height: 2.3rem; vertical-align: middle; margin-right: .5rem; }
+  tr.me td { background: var(--sun); }
+  .next { display: flex; align-items: center; gap: 1rem; margin: 1rem 0 1.6rem; }
+  .next img { width: 5rem; height: 5rem; }
+  .next .txt { flex: 1; }
+  .next small { font-size: 1rem; opacity: .65; }
+  .next .btn { flex: none; padding: 1rem 1.4rem; }
+
+  /* creature gallery */
+  #dexcv { width: 100%; border: .3rem solid var(--navy); border-radius: 1.4rem; background: #63cf5c; display: block; }
+  .dexinfo { margin: .8rem 0; padding: .9rem 1.1rem; }
+  .dexinfo .nm { font-size: 1.9rem; display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+  .tag { font-size: .95rem; color: #fff; padding: .25rem .7rem; border-radius: 1rem; letter-spacing: .05em; }
+  .dexinfo p { font-size: 1.12rem; margin-top: .35rem; font-weight: 800; opacity: .85; }
+  .dexgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; padding-bottom: 1.4rem; }
+  .dex { padding: .2rem 0 .4rem; background: #fff; border: .25rem solid var(--navy); border-radius: 1rem; font: inherit; font-size: .8rem; color: var(--navy); overflow: hidden; }
+  .dex.on { box-shadow: 0 0 0 .3rem var(--sun); }
+  .dex img { width: 100%; display: block; }
+
+  /* how to play */
+  .how li { font-size: 1.3rem; font-weight: 800; margin: .7rem 0; line-height: 1.35; }
+  .how ul { margin: 0; padding-left: 1.8rem; }
+  .how b { color: #d2452a; }
+
+  /* result + pause */
+  .card { width: 30rem; max-width: 92%; text-align: center; }
+  .card h2 { margin: .4rem 0 .6rem; font-size: 3.2rem; }
+  .scoreline { display: flex; align-items: center; justify-content: center; gap: 1.2rem; font-size: 3.6rem; }
+  .scoreline img { width: 5rem; height: 5rem; }
+  .mvp { display: flex; align-items: center; justify-content: center; gap: .8rem; margin: .8rem 0 .2rem; font-size: 1.3rem; }
+  .mvp img { width: 6rem; height: 6rem; background: #eef3ff; border-radius: 1rem; }
+  .sub { font-size: 1.1rem; opacity: .7; font-weight: 800; margin-bottom: .6rem; }
+  .top { width: 36rem; max-width: 100%; display: flex; align-items: center; padding: 0 1.2rem; }
+  .top h2 { flex: 1; }
+  .back { flex: none; width: 4.2rem; height: 4.2rem; padding: 0; font-size: 2rem; border-radius: 50%; margin-top: 1rem; }
+  .pad { width: 4.2rem; flex: none; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="ui">
+
+  <section id="s-title" class="screen">
+    <div class="logo"><div class="l1">SUNLINGS</div><div class="l2">ARENA LEAGUE</div></div>
+    <div class="grow"></div>
+    <div class="col">
+      <div class="panel bottom">
+        <button id="b-league" class="btn big" style="width:100%">PLAY LEAGUE</button>
+        <div class="row"><button id="b-quick" class="btn blue">QUICK BATTLE</button><button id="b-dex" class="btn green">CREATURES</button></div>
+        <div class="row"><button id="b-how" class="btn ghost">HOW TO PLAY</button><button id="b-snd" class="btn ghost">SOUND ON</button><button id="b-mus" class="btn ghost">MUSIC ON</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-teams" class="screen solid">
+    <div class="top"><button class="btn back" data-go="title">&#8249;</button><h2 class="outline">PICK YOUR TEAM</h2><div class="pad"></div></div>
+    <div class="col grow scroll"><div id="teamgrid" class="teams"></div></div>
+  </section>
+
+  <section id="s-league" class="screen solid">
+    <div class="top"><button class="btn back" data-go="title">&#8249;</button><h2 class="outline" id="lg-title">SUNNY LEAGUE</h2><div class="pad"></div></div>
+    <div class="col grow scroll">
+      <div class="panel next" id="lg-next"></div>
+      <table id="lg-table"></table>
+      <div class="row" style="margin:1rem 0 1.6rem"><button id="b-newseason" class="btn ghost">START A NEW SEASON</button></div>
+    </div>
+  </section>
+
+  <section id="s-dex" class="screen solid">
+    <div class="top"><button class="btn back" data-go="title">&#8249;</button><h2 class="outline">CREATURES</h2><div class="pad"></div></div>
+    <div class="col">
+      <canvas id="dexcv"></canvas>
+      <div class="panel dexinfo" id="dexinfo"></div>
+    </div>
+    <div class="col grow scroll"><div id="dexgrid" class="dexgrid"></div></div>
+  </section>
+
+  <section id="s-how" class="screen solid">
+    <div class="top"><div class="pad"></div><h2 class="outline">HOW TO PLAY</h2><div class="pad"></div></div>
+    <div class="col grow scroll">
+      <div class="panel how">
+        <ul>
+          <li>Tap an <b>element</b>, then <b>drag a creature</b> onto your half of the field. It fights on its own.</li>
+          <li>All <b>50 creatures</b> are ready at all times. No costs, no waiting. Up to <b>6</b> on the field.</li>
+          <li><b>First to 15 KOs wins.</b> Every creature you lose is a point for your rival, so pick your matchups.</li>
+          <li>Elements matter: <b>&#9650; green</b> means strong against what the rival has out, <b>&#9660; red</b> means weak.</li>
+          <li><b>Guardians</b> soak damage up front. <b>Snipers</b> and <b>Casters</b> hit from behind them. <b>Dashers</b> dive past and hunt the back line. <b>Brawlers</b> stop the Dashers.</li>
+          <li>A creature heads home after <b>2 minutes</b> in the arena. Keep at least one out, or the rival scores.</li>
+        </ul>
+      </div>
+      <div class="row" style="margin:1.4rem 0"><button id="b-howok" class="btn big">GOT IT!</button></div>
+    </div>
+  </section>
+
+  <section id="s-pause" class="screen dim">
+    <div class="panel card">
+      <h2>PAUSED</h2>
+      <button id="b-resume" class="btn big" style="width:100%">RESUME</button>
+      <div class="row"><button id="b-snd2" class="btn ghost">SOUND ON</button><button id="b-mus2" class="btn ghost">MUSIC ON</button></div>
+      <div class="row"><button id="b-quit" class="btn ghost">LEAVE MATCH</button></div>
+    </div>
+  </section>
+
+  <section id="s-result" class="screen dim">
+    <div class="panel card">
+      <h2 id="rs-title">VICTORY!</h2>
+      <div class="scoreline" id="rs-score"></div>
+      <div class="mvp" id="rs-mvp"></div>
+      <p class="sub" id="rs-sub"></p>
+      <button id="b-continue" class="btn big" style="width:100%">CONTINUE</button>
+      <div class="row"><button id="b-rematch" class="btn ghost">PLAY AGAIN</button><button id="b-menu" class="btn ghost">MAIN MENU</button></div>
+    </div>
+  </section>
+
+</div>
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/art.js"></script>
+<script src="js/creatures_a.js"></script>
+<script src="js/creatures_b.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/attacks_a.js"></script>
+<script src="js/attacks_b.js"></script>
+<script src="js/game.js"></script>
+<script src="js/render.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/league.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
