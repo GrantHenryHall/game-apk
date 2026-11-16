@@ -215,10 +215,10 @@ const UI = {
     });
     // strong against / weak to
     const chips = (label, ids, col, cy) => {
-      ctx.font = '900 6.6px ' + FONT; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(label, x + w - 76, cy - 11);
+      ctx.font = '900 6.6px ' + FONT; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(label, x + w - 76, cy - 14.5);
       ids.forEach((id, i) => { const cx = x + w - 66 + i * 26; ctx.fillStyle = EL[id].col; ctx.beginPath(); ctx.arc(cx, cy, 9.4, 0, TAU); ctx.fill(); elGlyph(ctx, id, cx, cy, 5.2, '#fff'); });
     };
-    chips('▲ STRONG VS', BEATS[sp.el], '#2fae48', y + 30);
+    chips('▲ STRONG VS', BEATS[sp.el], '#2fae48', y + 32);
     chips('▼ WEAK TO', ELEMENTS.filter(q => BEATS[q.id].indexOf(sp.el) >= 0).map(q => q.id), '#e0455a', y + h - 15);
     if (this.drag) {
       const ok = this.overField();
