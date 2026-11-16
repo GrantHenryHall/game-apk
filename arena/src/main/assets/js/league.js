@@ -2,7 +2,7 @@
 // ---------- the Sunny League: ten teams, nine rounds, everyone plays everyone ----------
 const League = (() => {
   const KEY = 'sunlings.league.v1';
-  let st = null;
+  let st = null, nextSeason = 1;
 
   // classic round-robin "circle" schedule: 9 rounds of 5 pairings
   function makeSchedule() {
@@ -28,8 +28,8 @@ const League = (() => {
     return st;
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* storage may be unavailable */ } }
-  function start(teamId) { st = fresh(teamId, st && st.done ? st.season + 1 : (st ? st.season : 1)); save(); return st; }
-  function reset() { st = null; try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
+  function start(teamId) { st = fresh(teamId, nextSeason); save(); return st; }
+  function reset() { nextSeason = st && st.done ? st.season + 1 : 1; st = null; try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
 
   function nextRival() {
     if (!st || st.done) return null;

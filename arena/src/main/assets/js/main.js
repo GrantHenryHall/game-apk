@@ -9,6 +9,8 @@ const App = {
   img: { team: {}, sp: {} },
 
   init() {
+    // a WebView can report a zero-sized window for a moment while it is being attached
+    if (!window.innerWidth || !window.innerHeight) { setTimeout(() => this.init(), 60); return; }
     this.cv = $('cv'); this.ctx = this.cv.getContext('2d');
     this.dctx = $('dexcv').getContext('2d');
     League.load();
@@ -210,7 +212,13 @@ const App = {
     click('b-continue', () => { if (this.match.league) { this.startDemo(); this.openLeague(); } else this.toTitle(); });
     click('b-rematch', () => this.startBattle(this.match));
     click('b-menu', () => this.toTitle());
-    click('b-newseason', () => { League.reset(); this.openTeams(); });
+    // a season in progress takes a second tap to throw away
+    let armed = 0;
+    click('b-newseason', () => {
+      const st = League.state, now = Date.now();
+      if (st && !st.done && now - armed > 3500) { armed = now; $('b-newseason').textContent = 'TAP AGAIN TO RESTART THE SEASON'; setTimeout(() => { $('b-newseason').textContent = 'START A NEW SEASON'; }, 3500); return; }
+      armed = 0; $('b-newseason').textContent = 'START A NEW SEASON'; League.reset(); this.openTeams();
+    });
     document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { Sfx.play('ui'); this.show(b.getAttribute('data-go')); }));
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.pause(); });
     this.syncAudioButtons();
@@ -218,6 +226,7 @@ const App = {
     // Android back button (called from the native shell). Returns true when handled here.
     window.appBack = () => {
       if (this.mode === 'battle' && !this.G.over) { if (this.paused) this.resume(); else this.pause(); return true; }
+      if (this.mode === 'battle' && !this.screen) return true;   // victory moment: results are on their way
       if (this.screen && this.screen !== 'title') { if (this.mode === 'battle') this.toTitle(); else this.show('title'); return true; }
       return false;
     };

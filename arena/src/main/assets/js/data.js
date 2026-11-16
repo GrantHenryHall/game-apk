@@ -31,7 +31,7 @@ function typeMult(att, def) {
 const ROLES = {
   tank:    { name: 'Guardian', tip: 'Tough front-liner' },
   brawler: { name: 'Brawler',  tip: 'Melee damage' },
-  dasher:  { name: 'Dasher',   tip: 'Dives the back line, +50% vs Snipers & Casters' },
+  dasher:  { name: 'Dasher',   tip: 'Hunts Snipers and Casters' },
   sniper:  { name: 'Sniper',   tip: 'Long range, fragile' },
   caster:  { name: 'Caster',   tip: 'Area magic & support' }
 };
@@ -49,13 +49,13 @@ const SPECIES_RAW = [
   ['walrump', 'Walrump', 'water', 'tank', 1100, 46, 1.6, 0, 26, 21, 'Tidal Flop', 'Splash hits nearby foes', { aoe: 36 }],
   ['snipclaw', 'Snipclaw', 'water', 'brawler', 680, 74, 1.15, 0, 38, 16, 'Bubble Clamp', 'Heavy single pinch', {}],
   ['zipfin', 'Zipfin', 'water', 'dasher', 420, 92, 1.2, 80, 76, 13, 'Jet Lance', 'Water-jet charge', {}],
-  ['inkjet', 'Inkjet', 'water', 'sniper', 320, 22, 1.3, 135, 36, 13, 'Ink Burst', 'Three ink shots, slows attacks', { hits: 3, chill: 1.2 }],
+  ['inkjet', 'Inkjet', 'water', 'sniper', 320, 22, 1.3, 135, 36, 13, 'Ink Burst', 'Three shots, slows foes', { hits: 3, chill: 1.2 }],
   ['drizzelly', 'Drizzelly', 'water', 'caster', 400, 48, 2.0, 110, 34, 14, 'Bubble Bloom', 'Area pop + heals allies', { aoe: 38, heal: 26 }],
   // ---- LEAF ----
   ['stumply', 'Stumply', 'leaf', 'tank', 1050, 62, 1.35, 46, 25, 20, 'Root Rise', 'Roots foes in place', { root: 1.2 }],
   ['brambear', 'Brambear', 'leaf', 'brawler', 660, 24, 1.05, 0, 40, 16, 'Thorn Swipe', 'Triple claw, self-heals', { hits: 3, selfHeal: 7 }],
-  ['cloverbun', 'Cloverbun', 'leaf', 'dasher', 410, 80, 1.0, 64, 78, 13, 'Lucky Kick', 'Chance of a double-damage kick', { crit: .25 }],
-  ['bloomerang', 'Bloomerang', 'leaf', 'sniper', 340, 44, 1.5, 130, 36, 13, 'Petal-rang', 'Hits going out and coming back', { back: 34 }],
+  ['cloverbun', 'Cloverbun', 'leaf', 'dasher', 410, 80, 1.0, 64, 78, 13, 'Lucky Kick', 'May land a double-damage kick', { crit: .25 }],
+  ['bloomerang', 'Bloomerang', 'leaf', 'sniper', 340, 44, 1.5, 130, 36, 13, 'Petal-rang', 'Hits out and back', { back: 34 }],
   ['sporel', 'Sporel', 'leaf', 'caster', 420, 44, 1.9, 105, 34, 14, 'Healing Spores', 'Heals all nearby allies', { heal: 34, healR: 72 }],
   // ---- SPARK ----
   ['ohmadillo', 'Ohmadillo', 'spark', 'tank', 900, 60, 1.5, 70, 32, 19, 'Static Roll', 'Rolls in, may paralyze', { stunCh: .3, stun: .5 }],
@@ -94,7 +94,7 @@ const SPECIES_RAW = [
   ['mageling', 'Mageling', 'mystic', 'sniper', 300, 80, 1.45, 150, 36, 14, 'Arcane Orb', 'Big magic blast', {}],
   ['lunafawn', 'Lunafawn', 'mystic', 'caster', 390, 58, 1.8, 118, 36, 15, 'Moonbeam', 'Heals the weakest ally', { healOne: 55 }],
   // ---- SHADOW ----
-  ['cryptoise', 'Cryptoise', 'shadow', 'tank', 1080, 46, 1.6, 60, 23, 20, 'Grave Rise', 'Curses foes to take more damage', { curse: 3 }],
+  ['cryptoise', 'Cryptoise', 'shadow', 'tank', 1080, 46, 1.6, 60, 23, 20, 'Grave Rise', 'Curses: foes take more damage', { curse: 3 }],
   ['obsidrake', 'Obsidrake', 'shadow', 'brawler', 640, 84, 1.2, 0, 40, 17, 'Night Fang', 'Drains life', { leech: .2 }],
   ['shinobat', 'Shinobat', 'shadow', 'dasher', 410, 82, 1.05, 72, 82, 12, 'Echo Swoop', 'Swoops and drains life', { leech: .3 }],
   ['lumbra', 'Lumbra', 'shadow', 'sniper', 310, 24, 1.35, 138, 36, 14, 'Wisp Spiral', 'Three spiralling wisps', { hits: 3 }],
@@ -138,5 +138,6 @@ const RULES = {
   STINT: 120,                // seconds a creature stays out before it is called back
   DEPLOY: 0.55,              // pop-in time before a fresh creature acts
   EMPTY_GRACE: 5,            // seconds with an empty side before the rival is awarded a point
+  FIRST_GRACE: 12,           // ...but the opening send-out gets longer
   MARGIN: 16
 };

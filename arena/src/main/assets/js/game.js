@@ -41,6 +41,9 @@ class Game {
     return best;
   }
 
+  // how long a side may stand empty before the rival is given a point (longer before the very first send-out)
+  grace(s) { return this.stats.sent[s] === 0 ? RULES.FIRST_GRACE : RULES.EMPTY_GRACE; }
+
   // ----- deploying -----
   canDeploy(s, id) { return this.state === 'play' && this.count(s) < RULES.MAX_FIELD && !this.has(s, id); }
   clampDeploy(s, x, y) {
@@ -176,7 +179,7 @@ class Game {
       for (let s = 0; s < 2; s++) {
         if (this.count(s) === 0) {
           this.empty[s] += dt;
-          if (this.empty[s] >= RULES.EMPTY_GRACE) {
+          if (this.empty[s] >= this.grace(s)) {
             this.empty[s] = 0; this.score[1 - s]++;
             this.fx.text(FW / 2, s === 0 ? FH * .72 : FH * .28, 'EMPTY SIDE! +1', '#ffe14a', 12, { dur: 1.4, vy: -8 });
             this.emit('penalty', { side: s });
@@ -256,7 +259,7 @@ class Game {
       }
       return;
     }
-    if (u.life <= 0) { this.recall(u); return; }
+    if (u.life <= 0) { this.fx.text(u.x, u.y - u.r * 2.6, 'HOME TIME!', '#ffffff', 7.5, { dur: 1 }); this.recall(u); return; }
 
     u.cd -= dt * slow;
     u.retarget -= dt;

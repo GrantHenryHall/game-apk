@@ -200,10 +200,10 @@ const UI = {
     elGlyph(ctx, e.id, tx + nw + 15.5, y + 16, 4, '#fff');
     ctx.font = '900 8px ' + FONT; ctx.fillStyle = '#fff'; ctx.fillText(e.name.toUpperCase(), tx + nw + 22.5, y + 16.4);
     ctx.fillStyle = e.dark; ctx.beginPath(); ctx.arc(tx + 6, y + 33, 6.4, 0, TAU); ctx.fill(); roleGlyph(ctx, sp.role, tx + 6, y + 33, 3.6, '#fff');
-    ctx.font = '800 8.6px ' + FONT; ctx.fillStyle = '#4a5280'; ctx.fillText(ROLES[sp.role].name + ' · ' + ROLES[sp.role].tip, tx + 16, y + 33.4);
+    ctx.font = '800 8.6px ' + FONT; ctx.fillStyle = '#4a5280'; ctx.fillText(ROLES[sp.role].name + ' · ' + ROLES[sp.role].tip, tx + 16, y + 33.4, 158);
     ctx.font = '900 8.8px ' + FONT; ctx.fillStyle = '#232a4d'; ctx.fillText(sp.move, tx, y + 48.5);
-    const mw = ctx.measureText(sp.move).width;
-    ctx.font = '700 8.4px ' + FONT; ctx.fillStyle = '#6b739c'; ctx.fillText(sp.blurb, tx + mw + 6, y + 48.5);
+    const mw = ctx.measureText(sp.move).width, room = 172 - mw - 6;
+    ctx.font = '700 8.4px ' + FONT; ctx.fillStyle = '#6b739c'; ctx.fillText(sp.blurb, tx + mw + 6, y + 48.5, room);
     // stat bars
     const dps = sp.dmg * (sp.hits || 1) / sp.cd + (sp.back ? sp.back / sp.cd : 0);
     const stats = [['HP', sp.hp / 3450, '#57e06a'], ['ATK', dps / 110, '#ff7a5c'], ['SPD', sp.spd / 92, '#4fc3ff'], ['RNG', sp.range ? sp.range / 155 : .12, '#ffcf33']];
@@ -287,9 +287,10 @@ const UI = {
       chunkyText(ctx, 'BATTLE!', cx, cy, 44 * (.7 + Ease.outBack(Math.min(1, k * 3)) * .3), '#ffd23d', '#232a4d', 8); ctx.globalAlpha = 1;
     }
     if (G.state === 'play' && G.count(0) === 0 && G.time - (G.t0 || 0) > 1) {
-      const left = Math.max(0, RULES.EMPTY_GRACE - G.empty[0]), pulse = 1 + Math.sin(time * 9) * .05;
-      chunkyText(ctx, 'SEND OUT A CREATURE!', cx, V.fy + V.fh * .76, 15 * pulse, '#fff', '#e0455a', 4.6);
-      chunkyText(ctx, 'rival scores in ' + left.toFixed(0), cx, V.fy + V.fh * .76 + 17, 9, '#ffe14a', '#232a4d', 3);
+      const left = Math.max(0, G.grace(0) - G.empty[0]), pulse = 1 + Math.sin(time * 9) * .05, first = G.stats.sent[0] === 0;
+      chunkyText(ctx, first ? 'DRAG A CREATURE UP HERE!' : 'SEND OUT A CREATURE!', cx, V.fy + V.fh * .76, 15 * pulse, '#fff', first ? '#232a4d' : '#e0455a', 4.6);
+      if (!first || left < 6) chunkyText(ctx, 'rival scores in ' + Math.ceil(left), cx, V.fy + V.fh * .76 + 17, 9, '#ffe14a', '#232a4d', 3);
+      if (first) { const by = V.fy + V.fh * .76 + 40 + Math.abs(Math.sin(time * 4)) * 8; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#232a4d'; ctx.lineWidth = 2.4; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(cx, by - 12); ctx.lineTo(cx + 12, by + 2); ctx.lineTo(cx + 5, by + 2); ctx.lineTo(cx + 5, by + 14); ctx.lineTo(cx - 5, by + 14); ctx.lineTo(cx - 5, by + 2); ctx.lineTo(cx - 12, by + 2); ctx.closePath(); ctx.stroke(); ctx.fill(); }
     }
     if (G.over) {
       const k = Math.min(1, G.over.t / .5), won = G.over.winner === 0;
