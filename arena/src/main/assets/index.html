@@ -32,6 +32,9 @@
     text-shadow: -.3rem 0 var(--navy), .3rem 0 var(--navy), 0 -.3rem var(--navy), 0 .3rem var(--navy), -.22rem -.22rem var(--navy), .22rem -.22rem var(--navy), -.22rem .22rem var(--navy), .22rem .22rem var(--navy), 0 .7rem 0 var(--navy), 0 1rem 1.2rem rgba(20, 30, 80, .35); }
   .logo .l2 { display: inline-block; margin-top: 1.1rem; font-size: 1.55rem; letter-spacing: .32em; padding: .45rem 1rem .45rem 1.3rem; border-radius: 2rem; background: var(--navy); color: #fff; }
 
+  .logo .ver { display: table; margin: .7rem auto 0; font-size: 1rem; letter-spacing: .22em; padding: .28rem .75rem .28rem .95rem; border-radius: 2rem; background: var(--sun); color: var(--navy); border: .2rem solid var(--navy); }
+  .logo .ver:empty { display: none; }
+
   .panel { background: var(--cream); border: .3rem solid var(--navy); border-radius: 1.6rem; box-shadow: 0 .5rem 0 var(--navy); padding: 1.2rem; pointer-events: auto; }
   .panel.bottom { margin-bottom: 1.6rem; }
   .row { display: flex; gap: .8rem; margin-top: .8rem; }
@@ -105,7 +108,7 @@
 <div id="ui">
 
   <section id="s-title" class="screen">
-    <div class="logo"><div class="l1">SUNLINGS</div><div class="l2">ARENA LEAGUE</div></div>
+    <div class="logo"><div class="l1">SUNLINGS</div><div class="l2">ARENA LEAGUE</div><div class="ver" id="ver"></div></div>
     <div class="grow"></div>
     <div class="col">
       <div class="panel bottom">

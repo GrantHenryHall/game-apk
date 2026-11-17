@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#2F9BFF</color>
+    <!-- edition 2 wears a grass-green icon so it is easy to tell from the sky-blue original -->
+    <color name="ic_launcher_background">#2FBF6B</color>
     <color name="sky">#2F9BFF</color>
 </resources>

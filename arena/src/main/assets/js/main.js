@@ -228,6 +228,8 @@ const App = {
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.pause(); });
     this.syncAudioButtons();
     window.setSafeTop = px => { this.safePx = px; this.layout(); };
+    // the native shell says which side-by-side edition of the app this is
+    window.setEdition = n => { const e = document.getElementById('ver'); if (e) e.textContent = 'VERSION ' + n; };
     // Android back button (called from the native shell). Returns true when handled here.
     window.appBack = () => {
       if (this.mode === 'battle' && !this.G.over) { if (this.paused) this.resume(); else this.pause(); return true; }

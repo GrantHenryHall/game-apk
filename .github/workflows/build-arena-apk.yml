@@ -50,12 +50,19 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      # arena/EDITION says which side-by-side edition this is: each edition is a separate app on the
+      # phone (own package id, name and download link), so it never replaces an earlier edition.
+      - name: Read edition
+        id: ed
+        run: echo "n=$(tr -d '[:space:]' < arena/EDITION)" >> "$GITHUB_OUTPUT"
+
       - name: Build debug APK
         run: gradle :arena:assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
         run: |
           mkdir -p out
+          cp arena/build/outputs/apk/debug/arena-debug.apk "out/SunlingsArena-v${{ steps.ed.outputs.n }}.apk"
           cp arena/build/outputs/apk/debug/arena-debug.apk "out/SunlingsArena.apk"
           ls -la out
 
@@ -63,23 +70,43 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: SunlingsArena-APK
-          path: out/SunlingsArena.apk
+          path: out/SunlingsArena-v${{ steps.ed.outputs.n }}.apk
           if-no-files-found: error
 
-      - name: Publish APK to Release (easy phone download)
+      - name: Publish this edition's APK to its own Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sunlings-v${{ steps.ed.outputs.n }}
+          target_commitish: ${{ github.sha }}
+          name: "Sunlings Arena: version ${{ steps.ed.outputs.n }} APK"
+          body: |
+            **Sunlings Arena, version ${{ steps.ed.outputs.n }}**, the real-time creature arena battler.
+
+            This version is its own app called **Sunlings ${{ steps.ed.outputs.n }}**. It installs next to any other version of Sunlings Arena on your phone and never replaces one.
+
+            **Install on your phone:**
+            1. Tap `SunlingsArena-v${{ steps.ed.outputs.n }}.apk` below to download.
+            2. Open it; if prompted, allow installing apps from this source.
+            3. Launch **Sunlings ${{ steps.ed.outputs.n }}**, pick a team, and drag your creatures onto the field.
+
+            Built automatically from the latest commit (build #${{ github.run_number }}). Newer builds of version ${{ steps.ed.outputs.n }} install over this one.
+          prerelease: true
+          files: out/SunlingsArena-v${{ steps.ed.outputs.n }}.apk
+
+      - name: Point the "latest" Release at the same build
         uses: softprops/action-gh-release@v2
         with:
           tag_name: sunlings-latest
           target_commitish: ${{ github.sha }}
           name: "Sunlings Arena: latest APK"
           body: |
-            Latest installable build of **Sunlings Arena**, the real-time creature arena battler.
+            Newest build of **Sunlings Arena**, the real-time creature arena battler. Right now that is **version ${{ steps.ed.outputs.n }}** (build #${{ github.run_number }}).
+
+            Each version is its own app, so this one, called **Sunlings ${{ steps.ed.outputs.n }}**, installs next to earlier versions on your phone and never replaces one.
 
             **Install on your phone:**
             1. Tap `SunlingsArena.apk` below to download.
             2. Open it; if prompted, allow installing apps from this source.
-            3. Launch **Sunlings Arena**, pick a team, and drag your creatures onto the field.
-
-            Built automatically from the latest commit (build #${{ github.run_number }}). New builds install over older ones.
+            3. Launch **Sunlings ${{ steps.ed.outputs.n }}**, pick a team, and drag your creatures onto the field.
           prerelease: true
           files: out/SunlingsArena.apk

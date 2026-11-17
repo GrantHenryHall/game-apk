@@ -5,16 +5,25 @@ plugins {
 // CI stamps every build with a rising version code so a new APK always installs over the old one.
 def ciBuild = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int
 
+// Each edition is its own app on the phone: its own package id, name and download link, so a new
+// edition installs next to the earlier ones instead of replacing them. The original app (edition 1)
+// is "com.sunlings.arena". Bump the number in arena/EDITION to start another side-by-side edition.
+def edition = file('EDITION').text.trim()
+if (!(edition ==~ /[0-9]+/)) throw new GradleException("arena/EDITION must hold a whole number, found '${edition}'")
+
 android {
     namespace 'com.sunlings.arena'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.sunlings.arena"
+        applicationId "com.sunlings.arena.v${edition}"
         minSdk 26
         targetSdk 34
         versionCode ciBuild
-        versionName "1.0.${ciBuild}"
+        versionName "${edition}.0.${ciBuild}"
+        // short enough that a home screen shows the number instead of cutting it off
+        resValue "string", "app_name", "Sunlings ${edition}"
+        resValue "string", "edition", edition
     }
 
     // A fixed debug key that lives in the repo, so builds from different CI runs share one

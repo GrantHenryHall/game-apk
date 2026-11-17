@@ -59,6 +59,8 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 pageReady = true;
                 pushSafeArea();
+                // which side-by-side edition this is, shown under the logo
+                view.evaluateJavascript("window.setEdition && window.setEdition(" + getString(R.string.edition) + ");", null);
             }
         });
         web.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
