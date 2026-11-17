@@ -247,7 +247,7 @@ class Game {
       const A = u.atk; u.atkT += dt * slow;
       const k = Math.min(1, u.atkT / A.dur);
       if (A.pose) A.pose(u, k);
-      if (A.tick) A.tick(this, u, k);
+      if (A.tick) A.tick(this, u, k, dt);
       if (!u.fired && k >= A.at) {
         u.fired = true;
         if (u.tgt && u.tgt.state === 'active') { A.fire(this, u, u.tgt); this.emit('attack', { u }); }
@@ -268,13 +268,14 @@ class Game {
     if (!tg) return;
     const dx = tg.x - u.x, dy = tg.y - u.y, d = Math.hypot(dx, dy) || .001;
     if (Math.abs(dx) > 3) u.face = dx > 0 ? 1 : -1;
-    const reach = u.sp.range > 0 ? u.sp.range : u.r + tg.r + 5;
+    // melee creatures stop a little short of their target so the swing itself is easy to see
+    const reach = Math.max(u.sp.range, (u.r + tg.r) * RULES.SPREAD + 9);
     if (d <= reach) {
       if (u.cd <= 0) {
         const A = ATTACKS[u.sp.id];
         u.atk = A; u.atkT = 0; u.fired = false;
         u.adx = dx / d; u.ady = dy / d; u.adist = d;
-        u.aC = Math.max(0, d - (u.r + tg.r) * .85); u.aD = d + tg.r + u.r + 4;
+        u.aC = Math.max(0, d - (u.r + tg.r) * .8); u.aD = d + tg.r + u.r + 6;
         if (A.start) A.start(this, u, tg);
       }
     } else if (u.root <= 0) {
@@ -305,7 +306,7 @@ class Game {
         const q = us[j]; if (q.state !== 'active') continue;
         if (pd || (q.atkT >= 0 && q.atk.commit)) continue;
         let dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy);
-        const min = (p.r + q.r) * .82;
+        const min = (p.r + q.r) * RULES.SPREAD;
         if (d >= min) continue;
         if (d < .01) { dx = rnd(-1, 1); dy = rnd(-1, 1); d = Math.hypot(dx, dy) || 1; }
         const push = (min - d) * k, wp = q.r / (p.r + q.r), wq = p.r / (p.r + q.r);

@@ -303,7 +303,7 @@ function drawUnit(ctx, G, u, time) {
 
   // team ring + shadow
   if (u.state === 'active' || u.state === 'deploy') {
-    ctx.strokeStyle = u.side === 0 ? 'rgba(90,200,255,.85)' : 'rgba(255,90,100,.85)'; ctx.lineWidth = 1.6;
+    ctx.strokeStyle = u.side === 0 ? 'rgba(60,225,90,.9)' : 'rgba(255,60,75,.9)'; ctx.lineWidth = 1.8;
     ctx.beginPath(); ctx.ellipse(x, y + 1, u.r * 1.08, u.r * .43, 0, 0, TAU); ctx.stroke();
   }
   ctx.globalAlpha = al; drawShadow(ctx, u, lift); ctx.globalAlpha = 1;
@@ -322,7 +322,7 @@ function drawUnit(ctx, G, u, time) {
     ctx.restore();
   };
   ctx.globalAlpha = al; paint();
-  if (u.flash > .05) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * u.flash * .38; paint(); ctx.globalCompositeOperation = 'source-over'; }
+  if (u.flash > .05) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = al * u.flash * .28; paint(); ctx.globalCompositeOperation = 'source-over'; }
   ctx.globalAlpha = 1;
 
   const top = y - lift - 38 * s;
@@ -353,13 +353,19 @@ function drawUnit(ctx, G, u, time) {
   }
   // health bar, element pip and stint timer
   if (u.state === 'active' || u.state === 'deploy') {
-    const bw = 24 + u.r * .5, bx = x - bw / 2 + 3, by = top - 5, f = clamp(u.hp / u.maxHp, 0, 1);
-    ctx.fillStyle = 'rgba(25,20,40,.78)'; roundRect(ctx, bx - 1, by - 1, bw + 2, 5.6, 2.6); ctx.fill();
-    ctx.fillStyle = u.side === 0 ? (f > .35 ? '#5fe36a' : '#ffb52e') : (f > .35 ? '#ff6470' : '#ffb52e');
-    if (f > 0) { roundRect(ctx, bx, by, Math.max(2.4, bw * f), 3.6, 1.8); ctx.fill(); }
+    const bw = 26 + u.r * .5, bx = x - bw / 2 + 3, by = top - 6, f = clamp(u.hp / u.maxHp, 0, 1), mine = u.side === 0;
+    // your side: green bars. the rival: red bars. (the empty part keeps a dark tint of the same colour)
+    ctx.fillStyle = 'rgba(20,16,34,.85)'; roundRect(ctx, bx - 1.2, by - 1.2, bw + 2.4, 7, 3.4); ctx.fill();
+    ctx.fillStyle = mine ? '#17481f' : '#5a141c'; roundRect(ctx, bx, by, bw, 4.6, 2.3); ctx.fill();
+    if (f > 0) {
+      if (f < .3) ctx.globalAlpha = .7 + Math.sin(time * 12) * .3;
+      ctx.fillStyle = mine ? '#35e653' : '#ff3145'; roundRect(ctx, bx, by, Math.max(2.6, bw * f), 4.6, 2.3); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.35)'; roundRect(ctx, bx + .8, by + .6, Math.max(1.4, bw * f - 1.6), 1.3, .65); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
     const lf = clamp(u.life / RULES.STINT, 0, 1);
-    ctx.fillStyle = 'rgba(25,20,40,.6)'; ctx.fillRect(bx, by + 5.2, bw, 1.5);
-    ctx.fillStyle = lf < .12 ? '#ff5a5a' : '#ffffff'; ctx.fillRect(bx, by + 5.2, bw * lf, 1.5);
+    ctx.fillStyle = 'rgba(25,20,40,.6)'; ctx.fillRect(bx, by + 6.6, bw, 1.6);
+    ctx.fillStyle = lf < .17 ? '#ffd23d' : '#ffffff'; ctx.fillRect(bx, by + 6.6, bw * lf, 1.6);
     const e = EL[u.sp.el];
     ctx.beginPath(); ctx.arc(bx - 5, by + 2, 4.4, 0, TAU); ctx.fillStyle = '#fff'; ctx.fill();
     ctx.beginPath(); ctx.arc(bx - 5, by + 2, 3.6, 0, TAU); ctx.fillStyle = e.col; ctx.fill();

@@ -237,7 +237,7 @@ const UI = {
       const d = this.dropPoint(), sp = this.drag.sp, reach = sp.range || sp.r + 20;
       ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.arc(d.x, d.y, reach, 0, TAU); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
-      ctx.strokeStyle = 'rgba(90,200,255,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(d.x, d.y + 1, sp.r * 1.1, sp.r * .44, 0, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = 'rgba(60,225,90,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(d.x, d.y + 1, sp.r * 1.1, sp.r * .44, 0, 0, TAU); ctx.stroke();
     }
   },
   dragAir(ctx, time) {
