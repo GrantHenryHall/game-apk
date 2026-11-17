@@ -311,14 +311,24 @@ function drawUnit(ctx, G, u, time) {
   const face = (u.flip ? -1 : 1) * u.face, s = u.vs;
   const t = time + u.seed * 9, br = Math.sin(t * 3) * .018;
   const hop = u.moving ? Math.abs(Math.sin(t * 13)) * 2.2 : 0;
-  const jx = u.flash > 0 ? Math.sin(time * 90) * u.flash * 1.6 : 0;
-  const pose = { atk: u.atkT >= 0 ? clamp(u.atkT / u.atk.dur, .001, 1) : 0, moving: u.moving, seed: u.seed, shut };
+  // flinch: knocked back along the line of the blow, squashed, leaning away, then springing back
+  let fl = 0, flx = 0, fly = 0;
+  if (u.recT < .32 && u.rec > 0 && u.state === 'active') {
+    const q = u.recT / .32; fl = (q < .2 ? Ease.outCubic(q / .2) : 1 - Ease.inOut((q - .2) / .8)) * u.rec;
+    flx = u.rx * fl * 5.5; fly = u.ry * fl * 5.5;
+    sx *= 1 - fl * .09; sy *= 1 + fl * .06;
+  }
+  const A = u.atkT >= 0 ? u.atk : null;
+  const pose = { atk: A ? clamp(u.atkT / A.dur, .001, 1) : 0, hit: A ? A.at : 0, beats: A ? A.beats : null, hurt: u.recT < .26 && u.state === 'active' ? 1 : 0, moving: u.moving, seed: u.seed, shut };
+  const lean = fl * .16 * u.rx * face;
   const paint = () => {
     ctx.save();
-    ctx.translate(x + jx, y - lift - hop);
+    ctx.translate(x + flx, y + fly - lift - hop);
     ctx.scale(s * face * sx * (1 - br * .5), s * sy * (1 + br));
     if (rot) { if (pivot) { ctx.translate(0, -15); ctx.rotate(rot); ctx.translate(0, 15); } else ctx.rotate(rot); }
-    drawCreature(ctx, u.sp.id, time, pose);
+    if (lean) ctx.rotate(lean);
+    const anc = drawCreature(ctx, u.sp.id, time, pose);
+    if (anc) u.anc = anc;
     ctx.restore();
   };
   ctx.globalAlpha = al; paint();

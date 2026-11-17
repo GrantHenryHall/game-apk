@@ -52,13 +52,13 @@ ATTACKS.yetuff = { dur: 1, at: .45,                         // Snowball Smash
       hit(t, x, y) {
         fx.burst(x, y, 9, { col: ['rgba(255,255,255,.95)', 'rgba(228,243,255,.9)'], shape: 'p', spd: 60, life: .5, size: 6.5, grow: 9, drag: 2 });
         fx.burst(x, y, 8, { col: '#ffffff', spd: 95, life: .55, size: 3, up: 60, g: 340 });   // clumps of snow
-        impact(G, 'frost', x, y, 1.3, t ? t.x : x, t ? t.y : y + 14);
+        impact(G, 'frost', x, y, 1.3, t ? t.x : x, t ? t.y : y + 14, aim(u));
         decal(fx, t ? t.x : x, t ? t.y : y + 14, 17, 'snow');
         G.shake(3.5); if (t) G.hit(u, t, u.sp.dmg);
       } });
   } };
 
-ATTACKS.slapguin = { dur: .74, at: .3,                      // Flipper Slap
+ATTACKS.slapguin = { dur: .74, at: .3, beats: [.3, .57],                   // Flipper Slap
   pose(u, k) { lunge(u, k, 10, .3); u.rot = Ease.hump(Ease.seg(k, 0, .7)) * .45; },
   start(G, u) {
     // it slides in on its belly, leaving a streak of ice
@@ -84,7 +84,7 @@ ATTACKS.slapguin = { dur: .74, at: .3,                      // Flipper Slap
         }
       } });
       fx.pow(x, y, i ? 11 : 8, '#8fd8ff', '#ffffff');
-      impact(G, 'frost', x, y, i ? .8 : .55, tg.x, tg.y);
+      impact(G, 'frost', x, y, i ? .8 : .55, tg.x, tg.y, aim(u));
       if (i) G.shake(1.5);
       G.hit(u, tg, u.sp.dmg);
     };
@@ -126,15 +126,15 @@ ATTACKS.lynxicle = { dur: .84, at: .55, commit: true,       // Blizzard Pounce
       } });
     }
     shock(fx, gx, gy, 5, 28, .4, '#aef2ff', true);
-    impact(G, 'frost', x, y, 1.1, gx, gy);
+    impact(G, 'frost', x, y, 1.1, gx, gy, aim(u));
     G.shake(2.5); G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.rimeling = { dur: .92, at: .4,                      // Frost Ray
   pose(u, k) { lunge(u, k, -4, .4); u.sy = 1 + Ease.hump(Ease.seg(k, .1, .9)) * .05; },
-  start(G, u) { charge(G, u, .92 * .38, () => muzzle(u, 20, 24), 17); },
+  start(G, u) { charge(G, u, .92 * .38, () => emit(u, 20, 24), 17); },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 20, 24);
+    const fx = G.fx, m = emit(u, 20, 24);
     let ex = bodyX(tg), ey = bodyY(tg), acc = 0;
     cross(fx, m.x, m.y, 20, '#ffffff', .25);
     fx.add({ dur: .5,
@@ -157,13 +157,13 @@ ATTACKS.rimeling = { dur: .92, at: .4,                      // Frost Ray
       } });
     // frost settles on the grass under the beam
     for (let i = 1; i <= 3; i++) fx.after(i * .05, () => decal(fx, lerp(u.x, tg.x, i / 4), lerp(u.y, tg.y, i / 4), 9, 'frost'));
-    impact(G, 'frost', ex, ey, 1, tg.x, tg.y);
+    impact(G, 'frost', ex, ey, 1, tg.x, tg.y, aim(u));
     G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.auroseal = { dur: 1, at: .45,                       // Aurora Veil
   pose(u, k) { u.lift = Ease.hump(Ease.seg(k, .1, .8)) * 3; u.rot = Math.sin(k * PI * 4) * .06; },
-  start(G, u) { charge(G, u, .42, () => muzzle(u, 6, 32), 17); },
+  start(G, u) { charge(G, u, .42, () => emit(u, 6, 32), 17); },
   fire(G, u, tg) {
     const fx = G.fx, x = tg.x, y = tg.y, R = u.sp.aoe, cols = ['95,255,192', '176,138,255', '255,138,216'];
     let acc = 0;
@@ -202,7 +202,7 @@ ATTACKS.wooloft = { dur: .84, at: .5,                       // Cloud Bump
       ctx.translate(x, y); ctx.rotate(an); ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
       for (let j = 0; j < 3; j++) { ctx.beginPath(); ctx.arc(-10, 0, 16 + j * 7 + k * 11, -.6, .6); ctx.stroke(); }
     } });
-    fx.pow(x, y, 12, '#cfe0ff', '#ffffff'); impact(G, 'sky', x, y, 1.1);
+    fx.pow(x, y, 12, '#cfe0ff', '#ffffff'); impact(G, 'sky', x, y, 1.1, undefined, undefined, aim(u));
     fx.text(x, y - 18, 'BOING', '#ffffff', 7.5, { dur: .55 });
     G.shake(2); G.hit(u, tg, u.sp.dmg);
   } };
@@ -224,11 +224,11 @@ ATTACKS.kickadee = { dur: .64, at: .4,                      // Gale Kick
       ctx.beginPath(); ctx.arc(-9, 0, 15, -1.05, 1.05); ctx.arc(-14.5, 0, 16.5, .86, -.86, true); ctx.closePath(); ctx.fillStyle = '#ffffff'; ctx.fill();
     } });
     for (let i = 0; i < 6; i++) { const v = rnd(80, 150); fx.p({ x: x + rnd(-8, 8), y: y + rnd(-8, 8), vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: .25, size: 3.4, col: '#ffffff', shape: 'k' }); }
-    impact(G, 'sky', x, y, .9);
+    impact(G, 'sky', x, y, .9, undefined, undefined, aim(u));
     G.shake(1.5); G.area(u, tg.x, tg.y, u.sp.aoe, u.sp.dmg);
   } };
 
-ATTACKS.hummingblur = { dur: .78, at: .15,                  // Needle Flurry
+ATTACKS.hummingblur = { dur: .78, at: .15, beats: [.15, .278, .406, .535, .663],               // Needle Flurry
   pose(u, k) { const j = Math.abs(Math.sin(Ease.seg(k, .1, .85) * PI * 5)); const d = Math.max(3 + j * 9, u.aC * (.35 + j * .6)); u.ox = u.adx * d; u.oy = u.ady * d + Math.sin(k * 60) * 1.2; },
   tick(G, u, k, dt) { if (k > .1 && k < .85 && every(u, dt, .045)) ghost(G, u, .32, .16); },
   fire(G, u, tg) {
@@ -243,16 +243,16 @@ ATTACKS.hummingblur = { dur: .78, at: .15,                  // Needle Flurry
       } });
       cross(fx, x, y, i === 4 ? 16 : 9, '#ffffff', .16, rnd(TAU));
       fx.p({ x, y, life: .3, size: 2.4, col: '#ff4fa0', shape: 'g' });
-      if (i === 4) { impact(G, 'sky', x, y, .75); G.shake(1); }
+      if (i === 4) { impact(G, 'sky', x, y, .75, undefined, undefined, aim(u)); G.shake(1); }
       G.hit(u, tg, u.sp.dmg);
     });
   } };
 
 ATTACKS.pelicannon = { dur: .88, at: .4,                    // Air Cannon
   pose(u, k) { const rc = Ease.seg(k, .4, .5) - Ease.seg(k, .5, .9); u.ox = -u.adx * 6 * rc; u.oy = -u.ady * 6 * rc; u.sy = 1 + Ease.hump(Ease.seg(k, 0, .4)) * .08; },
-  start(G, u) { charge(G, u, .88 * .38, () => muzzle(u, 27, 27), 21); },
+  start(G, u) { charge(G, u, .88 * .38, () => emit(u, 27, 27), 21); },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 27, 27), an0 = Math.atan2(bodyY(tg) - m.y, bodyX(tg) - m.x);
+    const fx = G.fx, m = emit(u, 27, 27), an0 = Math.atan2(bodyY(tg) - m.y, bodyX(tg) - m.x);
     fx.burst(m.x, m.y, 7, { col: '#ffffff', shape: 'p', spd: 46, life: .32, size: 4.4, grow: 9, ang: an0, spread: .8 });
     fx.ring(m.x, m.y, 3, 15, .22, '#ffffff', 2.4); cross(fx, m.x, m.y, 14, '#ffffff', .2);
     shoot(G, tg, { x: m.x, y: m.y, speed: 230, trailEvery: .05, glow: { r: 15, col: '#cfe0ff', al: .6 },
@@ -268,7 +268,7 @@ ATTACKS.pelicannon = { dur: .88, at: .4,                    // Air Cannon
       hit(t, x, y) {
         shock(fx, x, y, 6, 27, .32, '#cfe0ff'); fx.ring(x, y, 3, 17, .38, '#ffffff', 1.8, false, .06);
         for (let i = 0; i < 6; i++) { const a2 = an0 + rnd(-.5, .5), v = rnd(50, 95); fx.p({ x, y: y + rnd(-6, 8), vx: Math.cos(a2) * v, vy: Math.sin(a2) * v, drag: 2.5, life: .5, size: 5, grow: 8, col: 'rgba(255,255,255,.7)', shape: 'p' }); }
-        impact(G, 'sky', x, y, 1.15);
+        impact(G, 'sky', x, y, 1.15, undefined, undefined, aim(u));
         G.shake(2); if (t) G.hit(u, t, u.sp.dmg);
       } });
   } };
@@ -325,26 +325,25 @@ ATTACKS.snoxious = { dur: 1, at: .45,                       // Shell Spray
     G.area(u, x, y, R, u.sp.dmg);
   } };
 
-ATTACKS.scorplet = { dur: .78, at: .45,                     // Tail Sting
+ATTACKS.scorplet = { dur: .78, at: .45,                     // Tail Sting: the tail itself whips over; the effect is the jab and the venom
   pose(u, k) { ram(u, k, 3, 8, .45); },
-  start(G, u) { const m = muzzle(u, -2, 36); flare(G.fx, m.x, m.y, 12, '#a4ff4a', .3, .08); },
   fire(G, u, tg) {
-    const fx = G.fx, x = bodyX(tg), y = bodyY(tg), m = muzzle(u, -2, 36), cx = (m.x + x) / 2, cy = Math.min(m.y, y) - 22;
-    // the stinger whips over in an arc and jabs down
-    fx.add({ dur: .26, draw(ctx, k) {
-      const L = Ease.outCubic(Math.min(1, k * 2.4)), n = 14; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.beginPath();
-      for (let i = 0; i <= n; i++) { const f = i / n * L, q = 1 - f, px = q * q * m.x + 2 * q * f * cx + f * f * x, py = q * q * m.y + 2 * q * f * cy + f * f * y; ctx[i ? 'lineTo' : 'moveTo'](px, py); }
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * .7; ctx.strokeStyle = '#a4ff4a'; ctx.lineWidth = 9; ctx.stroke();
-      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1 - k * k; ctx.strokeStyle = '#b96adc'; ctx.lineWidth = 4; ctx.stroke(); ctx.strokeStyle = '#f0ffd0'; ctx.lineWidth = 1.4; ctx.stroke();
-      const q = 1 - L, hx = q * q * m.x + 2 * q * L * cx + L * L * x, hy = q * q * m.y + 2 * q * L * cy + L * L * y, an = Math.atan2(2 * (1 - L) * (cy - m.y) + 2 * L * (y - cy), 2 * (1 - L) * (cx - m.x) + 2 * L * (x - cx));
-      ctx.translate(hx, hy); ctx.rotate(an); ctx.fillStyle = '#a4ff4a'; ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-3, -4); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = .8; ctx.stroke();
+    const fx = G.fx, x = bodyX(tg), y = bodyY(tg), m = emit(u, 22, 12), an = Math.atan2(y - m.y, x - m.x);
+    // the stinger punches in: a short bright thrust from the tip into the target
+    fx.add({ dur: .16, draw(ctx, k) {
+      const L = Ease.outCubic(k); ctx.lineCap = 'round'; ctx.globalAlpha = 1 - k * k;
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(lerp(m.x, x, L), lerp(m.y, y, L));
+      ctx.strokeStyle = '#a4ff4a'; ctx.lineWidth = 3.4 * (1 - k * .5); ctx.stroke(); ctx.strokeStyle = '#f4ffe0'; ctx.lineWidth = 1.2; ctx.stroke();
     } });
-    fx.after(.1, () => {
-      cross(fx, x, y, 20, '#eaffb0', .22); shock(fx, x, y, 4, 20, .3, '#b45fe0');
-      impact(G, 'venom', x, y, 1, tg.x, tg.y);
-      G.shake(1.5); G.hit(u, tg, u.sp.dmg);
-    });
+    cross(fx, x - Math.cos(an) * 6, y - Math.sin(an) * 6, 15, '#eaffb0', .2, an);
+    impact(G, 'venom', x, y, 1, tg.x, tg.y, an);
+    // venom beads and runs down from the wound
+    for (let i = 0; i < 3; i++) fx.add({ dur: .7, delay: .08 + i * .07, draw(ctx, k) {
+      const dx = (i - 1) * 4, l = 9 * Ease.outCubic(Math.min(1, k * 1.5)); ctx.globalAlpha = k > .6 ? 1 - (k - .6) / .4 : 1;
+      ctx.strokeStyle = '#a4ff4a'; ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x + dx, y + 2); ctx.lineTo(x + dx, y + 2 + l); ctx.stroke();
+      ctx.fillStyle = '#c8ff8a'; ctx.beginPath(); ctx.arc(x + dx, y + 2 + l, 1.5, 0, TAU); ctx.fill();
+    } });
+    G.shake(1.5); G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.hopdart = { dur: .88, at: .4,                       // Dart Leap
@@ -358,7 +357,7 @@ ATTACKS.hopdart = { dur: .88, at: .4,                       // Dart Leap
   fire(G, u, tg) {
     const fx = G.fx, x = bodyX(tg), y = bodyY(tg);
     splat(fx, x, y, '#ffd12e', 14, .8); splat(fx, x + 3, y + 2, '#7d42c8', 7.5, .8);
-    impact(G, 'venom', x, y, 1, tg.x, tg.y);
+    impact(G, 'venom', x, y, 1, tg.x, tg.y, aim(u));
     // sticky strands stretch and snap as it hops away
     fx.add({ dur: .42, delay: .13, draw(ctx, k) {
       if (u.state !== 'active' || tg.state !== 'active' || k > .8) return;
@@ -371,9 +370,9 @@ ATTACKS.hopdart = { dur: .88, at: .4,                       // Dart Leap
 
 ATTACKS.hissyfit = { dur: .88, at: .45,                     // Venom Spit
   pose(u, k) { lunge(u, k, 4, .45); },
-  start(G, u) { charge(G, u, .88 * .42, () => muzzle(u, 9, 27), 15); },
+  start(G, u) { charge(G, u, .88 * .42, () => emit(u, 9, 27), 15); },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 9, 27);
+    const fx = G.fx, m = emit(u, 9, 27);
     fx.burst(m.x, m.y, 4, { col: ['#a4ff4a', '#b45fe0'], shape: 'd', spd: 40, life: .25, size: 2 });
     shoot(G, tg, { x: m.x, y: m.y, speed: 195, arc: 28, tail: { n: 10, w: 7, col: '#8c3fd0', core: '#a4ff4a', al: .85 }, glow: { r: 12, col: '#a4ff4a', al: .6 },
       draw(ctx, x, y, an) {
@@ -383,7 +382,7 @@ ATTACKS.hissyfit = { dur: .88, at: .45,                     // Venom Spit
       },
       trail(x, y) { fx.p({ x, y, vy: 30, g: 120, life: .35, size: 1.9, col: pick(['#a4ff4a', '#c88af0']), shape: 'd' }); },
       hit(t, x, y) {
-        impact(G, 'venom', x, y, 1, t ? t.x : x, t ? t.y : y + 12);
+        impact(G, 'venom', x, y, 1, t ? t.x : x, t ? t.y : y + 12, aim(u));
         if (t) G.hit(u, t, u.sp.dmg);
         venomPuddle(G, u, t ? t.x : x, t ? t.y : y + 12, 26, u.sp.puddle, 12);
       } });
@@ -392,11 +391,11 @@ ATTACKS.hissyfit = { dur: .88, at: .45,                     // Venom Spit
 ATTACKS.bubbrew = { dur: .98, at: .45,                      // Hex Brew
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .1, .6)); u.lift = p * 5; u.sy = 1 + p * .05; },
   start(G, u) {
-    charge(G, u, .98 * .42, () => muzzle(u, 0, 30), 18);
+    charge(G, u, .98 * .42, () => emit(u, 0, 30), 18);
     G.fx.burst(u.x, u.y - 26 * u.vs, 5, { col: ['#c8ff8a', '#a4ff4a'], shape: 'b', spd: 22, life: .7, size: 3, up: 30, g: -20 });
   },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 0, 30), gx = tg.x, gy = tg.y, R = u.sp.aoe, tr = [];
+    const fx = G.fx, m = emit(u, 0, 30), gx = tg.x, gy = tg.y, R = u.sp.aoe, tr = [];
     // a corked flask tumbles through the air, trailing green sparkles
     fx.add({ dur: .46,
       update(dt, k) { if (Math.random() < .7) fx.p({ x: lerp(m.x, gx, k) + rnd(-2, 2), y: lerp(m.y, gy - 6, k) - Math.sin(k * PI) * 36 + rnd(-2, 2), life: .4, size: 2, col: pick(['#a4ff4a', '#e2b4f5']), shape: 'g' }); },
@@ -472,9 +471,9 @@ ATTACKS.monolit = { dur: 1, at: .5,                         // Rune Pulse
 
 ATTACKS.chipmonk = { dur: .74, at: .42,                     // Chi Palm
   pose(u, k) { ram(u, k, 3, 8, .42); },
-  start(G, u) { charge(G, u, .74 * .4, () => muzzle(u, 15, 14), 14); },
+  start(G, u) { charge(G, u, .74 * .4, () => emit(u, 15, 14), 14); },
   fire(G, u, tg) {
-    const fx = G.fx, x = bodyX(tg), y = bodyY(tg), m = muzzle(u, 18, 14), an = Math.atan2(y - m.y, x - m.x);
+    const fx = G.fx, x = bodyX(tg), y = bodyY(tg), m = emit(u, 18, 14), an = Math.atan2(y - m.y, x - m.x);
     fx.add({ dur: .36, draw(ctx, k) {
       ctx.translate(m.x, m.y); ctx.rotate(an); ctx.lineCap = 'round';
       for (let j = 0; j < 4; j++) {
@@ -493,7 +492,7 @@ ATTACKS.chipmonk = { dur: .74, at: .42,                     // Chi Palm
       ctx.fillStyle = '#e6dcff'; palmShape(ctx);
       ctx.globalAlpha *= .6; ctx.fillStyle = '#ffffff'; ctx.scale(.6, .6); palmShape(ctx);
     } });
-    fx.after(.1, () => { shock(fx, x, y, 5, 24, .32, '#b48aff'); impact(G, 'mystic', x, y, .9); G.shake(2); G.hit(u, tg, u.sp.dmg); });
+    fx.after(.1, () => { shock(fx, x, y, 5, 24, .32, '#b48aff'); impact(G, 'mystic', x, y, .9, undefined, undefined, aim(u)); G.shake(2); G.hit(u, tg, u.sp.dmg); });
   } };
 
 ATTACKS.telemur = { dur: .78, at: .45, commit: true,        // Blink Strike
@@ -528,18 +527,18 @@ ATTACKS.telemur = { dur: .78, at: .45, commit: true,        // Blink Strike
       ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * .7; ctx.strokeStyle = '#b48aff'; ctx.lineWidth = 10; ctx.stroke();
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.4; ctx.stroke();
     } });
-    impact(G, 'mystic', x, y, 1);
+    impact(G, 'mystic', x, y, 1, undefined, undefined, aim(u));
     G.shake(2); G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.mageling = { dur: .92, at: .5,                      // Arcane Orb
   pose(u, k) { u.lift = Ease.hump(Ease.seg(k, .05, .6)) * 5; lunge(u, k, -3, .5); },
   start(G, u) {
-    charge(G, u, .92 * .48, () => muzzle(u, 24, 21), 17);
+    charge(G, u, .92 * .48, () => emit(u, 24, 21), 17);
     // a spell circle draws itself in the air in front of the wand
     G.fx.add({ dur: .92 * .64, draw(ctx, k) {
       if (u.state !== 'active') return;
-      const m = muzzle(u, 24, 21), al = k < .2 ? k / .2 : 1 - Ease.seg(k, .8, 1), R = 14 * Ease.outBack(Math.min(1, k * 2.5));
+      const m = emit(u, 24, 21), al = k < .2 ? k / .2 : 1 - Ease.seg(k, .8, 1), R = 14 * Ease.outBack(Math.min(1, k * 2.5));
       halo(ctx, m.x, m.y, R * 1.6, '#2fe0c8', al * .5);
       ctx.translate(m.x, m.y); ctx.scale(.5, 1); ctx.globalAlpha = al;
       ctx.strokeStyle = '#2fe0c8'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
@@ -551,7 +550,7 @@ ATTACKS.mageling = { dur: .92, at: .5,                      // Arcane Orb
     } });
   },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 24, 21);
+    const fx = G.fx, m = emit(u, 24, 21);
     cross(fx, m.x, m.y, 20, '#ffffff', .22);
     shoot(G, tg, { x: m.x, y: m.y, speed: 240, trailEvery: .03, tail: { n: 13, w: 9, col: '#7d42e8', core: '#e6dcff', add: true }, glow: { r: 18, col: '#b48aff', al: .8 },
       draw(ctx, x, y, an, k, it) {
@@ -570,7 +569,7 @@ ATTACKS.mageling = { dur: .92, at: .5,                      // Arcane Orb
           for (let i = 0; i <= 5; i++) { const an = i * TAU * 2 / 5; ctx[i ? 'lineTo' : 'moveTo'](Math.cos(an) * R, Math.sin(an) * R); }
           ctx.stroke();
         } });
-        impact(G, 'mystic', x, y, 1.2);
+        impact(G, 'mystic', x, y, 1.2, undefined, undefined, aim(u));
         if (t) { decal(fx, t.x, t.y, 15, 'sigil'); G.hit(u, t, u.sp.dmg); }
         G.shake(2);
       } });
@@ -578,7 +577,7 @@ ATTACKS.mageling = { dur: .92, at: .5,                      // Arcane Orb
 
 ATTACKS.lunafawn = { dur: .98, at: .45,                     // Moonbeam
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .05, .7)); u.lift = p * 4; u.rot = -p * .08; },
-  start(G, u) { charge(G, u, .98 * .42, () => muzzle(u, 11, 46), 17, 'gold'); },
+  start(G, u) { charge(G, u, .98 * .42, () => emit(u, 11, 46), 17, 'gold'); },
   fire(G, u, tg) {
     const fx = G.fx;
     const beam = (t, col, hex, heal) => {
@@ -600,7 +599,7 @@ ATTACKS.lunafawn = { dur: .98, at: .45,                     // Moonbeam
       for (let i = 0; i < 9; i++) fx.p({ x: t.x + rnd(-10, 10), y: t.y - rnd(40, 100), vy: rnd(40, 75), life: .7, size: 2.8, col: heal ? '#eaffd0' : '#fff7c0', shape: i % 2 ? 's' : 'g', vr: 4 });
     };
     beam(tg, '255,240,170', '#ffe680', false);
-    impact(G, 'mystic', bodyX(tg), bodyY(tg), .75);
+    impact(G, 'mystic', bodyX(tg), bodyY(tg), .75, undefined, undefined, aim(u));
     G.hit(u, tg, u.sp.dmg);
     const al = G.weakestAlly(u.side);
     if (al) fx.after(.16, () => { if (al.state !== 'active') return; beam(al, '200,255,220', '#b8ffd0', true); G.heal(al, u.sp.healOne, '#eaffd0'); });
@@ -645,14 +644,14 @@ ATTACKS.cryptoise = { dur: 1, at: .4,                       // Grave Rise
       if (tg.state !== 'active') return;
       const x = bodyX(tg), y = bodyY(tg);
       shock(fx, tg.x, tg.y, 4, 24, .38, '#b06aff', true);
-      impact(G, 'shadow', x, y, 1, tg.x, tg.y);
+      impact(G, 'shadow', x, y, 1, tg.x, tg.y, aim(u));
       G.shake(2); G.hit(u, tg, u.sp.dmg);
     });
   } };
 
 ATTACKS.obsidrake = { dur: .84, at: .5,                     // Night Fang
   pose(u, k) { ram(u, k, 4, 10, .5); },
-  start(G, u) { charge(G, u, .84 * .45, () => muzzle(u, 20, 24), 15); },
+  start(G, u) { charge(G, u, .84 * .45, () => emit(u, 20, 24), 15); },
   fire(G, u, tg) {
     const fx = G.fx, x = bodyX(tg), y = bodyY(tg);
     const jaw = (ctx, eyes) => {
@@ -675,7 +674,7 @@ ATTACKS.obsidrake = { dur: .84, at: .5,                     // Night Fang
       flare(fx, x, y, 26, '#ff2a3c', .24);
       // two crimson fang cuts are left hanging in the air
       fx.add({ dur: .4, draw(ctx, k) { ctx.globalAlpha = 1 - k; ctx.lineCap = 'round'; for (const q of [-5, 5]) { ctx.beginPath(); ctx.moveTo(x + q - 3, y - 11); ctx.quadraticCurveTo(x + q + 2, y, x + q - 2, y + 11); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#ff3a4a'; ctx.lineWidth = 5; ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#ffd0d6'; ctx.lineWidth = 1.5; ctx.stroke(); } } });
-      impact(G, 'shadow', x, y, 1.1, tg.x, tg.y);
+      impact(G, 'shadow', x, y, 1.1, tg.x, tg.y, aim(u));
       G.shake(3); G.hit(u, tg, u.sp.dmg);
     });
   } };
@@ -706,17 +705,17 @@ ATTACKS.shinobat = { dur: .64, at: .36, commit: true,       // Echo Swoop
     const fx = G.fx, x = bodyX(tg), y = bodyY(tg), an = Math.atan2(u.ady, u.adx);
     fx.slash(x - u.adx * 13, y - u.ady * 13, an, 18, '#8a5cff', { sweep: 2.3, wid: 7, dur: .28, edge: '#ff4ad0' });
     fx.slash(x - u.adx * 13, y - u.ady * 13, an, 12, '#ff4ad0', { sweep: 2, wid: 3, dur: .24, delay: .03 });
-    impact(G, 'shadow', x, y, .9, tg.x, tg.y);
+    impact(G, 'shadow', x, y, .9, tg.x, tg.y, aim(u));
     G.shake(1.5); G.hit(u, tg, u.sp.dmg);
   } };
 
-ATTACKS.lumbra = { dur: .92, at: .35,                       // Wisp Spiral
+ATTACKS.lumbra = { dur: .92, at: .35, beats: [.35, .48, .61],                    // Wisp Spiral
   pose(u, k) { u.lift = Ease.hump(Ease.seg(k, .05, .8)) * 4; },
-  start(G, u) { charge(G, u, .92 * .33, () => muzzle(u, 16, 25), 14, 'wisp'); },
+  start(G, u) { charge(G, u, .92 * .33, () => emit(u, 16, 25), 14, 'wisp'); },
   fire(G, u, tg) {
     const fx = G.fx;
     for (let i = 0; i < 3; i++) {
-      const m = muzzle(u, 16, 25), ph = i * TAU / 3, tr = [];
+      const m = emit(u, 16, 25), ph = i * TAU / 3, tr = [];
       let ex = bodyX(tg), ey = bodyY(tg), acc = 0;
       fx.add({ dur: Math.max(.34, dist2(m.x, m.y, ex, ey) / 165), delay: i * .12, px: m.x, py: m.y,
         update(dt, k, it) {
@@ -749,7 +748,7 @@ ATTACKS.lumbra = { dur: .92, at: .35,                       // Wisp Spiral
 
 ATTACKS.omencrow = { dur: 1, at: .45,                       // Nightfall
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .05, .7)); u.lift = p * 6; u.sy = 1 + p * .05; },
-  start(G, u) { charge(G, u, .42, () => muzzle(u, 4.4, 33), 15); },
+  start(G, u) { charge(G, u, .42, () => emit(u, 4.4, 33), 15); },
   fire(G, u, tg) {
     const fx = G.fx, x = tg.x, y = tg.y, R = u.sp.aoe;
     let acc = 0;

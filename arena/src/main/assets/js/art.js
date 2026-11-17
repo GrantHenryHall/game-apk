@@ -13,6 +13,15 @@ let ST = 0;              // walk swing -1..1
 let BK = false;          // blinking right now
 let W = 0;               // breathing wave -1..1
 let TW = 0;              // tail-wag wave -1..1
+// ---- attack choreography. An attack has one or more "beats" (moments a hit lands).
+// Around each beat a creature winds up (anticipation), snaps into the strike, holds, and recovers.
+let WD = 0;              // wind-up of the current beat 0..1 (peaks, then releases into the strike)
+let SK = 0;              // strike of the current beat 0..1 (hits 1 exactly as the blow lands, then eases off)
+let SM = 0;              // 1 while a limb is snapping through the strike (for motion smears)
+let BI = -1;             // which beat is playing (-1 when not attacking)
+let HU = 0;              // 1 while flinching from a hit
+const BW = [0, 0, 0, 0, 0, 0], BS = [0, 0, 0, 0, 0, 0];   // wind / strike per beat, for moves with several hits
+let ROOT = null, ROOTI = null, ANC = null;                // where the move comes out of the creature (see mark)
 
 function fs(fill, lw) {
   if (fill) { c.fillStyle = fill; c.fill(); }
@@ -72,6 +81,7 @@ function blush(x, y, s) { dot(x, y, 2.6 * (s || 1), 1.6 * (s || 1), 'rgba(255,10
 // eye: tall glossy dot by default, or a big eye when an iris colour is given
 function eye(x, y, s, iris) {
   s = s || 1;
+  if (HU > .35) { ln([x - 2.3 * s, y - 2 * s, x + 1.5 * s, y, x - 2.3 * s, y + 2 * s], INK, 1.6); return; }   // flinch: eyes squeezed
   if (BK) { ln([x - 2.4 * s, y, x, y + 1.3 * s, x + 2.4 * s, y], INK, 1.5); return; }
   if (iris) {
     el(x, y, 3.3 * s, 3.9 * s, '#fff', 0, 1.3);
@@ -83,6 +93,37 @@ function eye(x, y, s, iris) {
     dot(x - .7 * s, y - 1.2 * s, .95 * s, 1.15 * s, '#fff');
     dot(x + .7 * s, y + 1.3 * s, .5 * s, .5 * s, 'rgba(255,255,255,.55)');
   }
+}
+// two eyes at once; `closed` squeezes them shut (effort, concentration, bliss)
+function eyes(x1, y1, x2, y2, s, iris, closed, s2) { const b0 = BK; if (closed) BK = true; eye(x1, y1, s, iris); eye(x2, y2, s2 || s, iris); BK = b0; }
+// joint: everything drawn until U() is rotated by `ang` about (px,py) and shifted by (dx,dy)
+function J(px, py, ang, dx, dy) { c.save(); c.translate(px + (dx || 0), py + (dy || 0)); if (ang) c.rotate(ang); c.translate(-px, -py); }
+function U() { c.restore(); }
+// scale about a point (squash and stretch of one body part)
+function Z(px, py, sx, sy) { c.save(); c.translate(px, py); c.scale(sx, sy); c.translate(-px, -py); }
+// remember where this creature's move comes from (mouth, fist, wand tip...) in its own root space,
+// so effects start from exactly the right spot whatever pose it is in
+function mark(x, y) {
+  if (!ROOT) return;
+  if (!ROOTI) ROOTI = ROOT.inverse();
+  const m = c.getTransform(), wx = m.a * x + m.c * y + m.e, wy = m.b * x + m.d * y + m.f;
+  ANC = [ROOTI.a * wx + ROOTI.c * wy + ROOTI.e, ROOTI.b * wx + ROOTI.d * wy + ROOTI.f];
+}
+// motion smear: a soft tapered crescent trailing a fast limb. Sweeps from angle a0 (thin) to a1 (thick) about (cx,cy)
+function swoosh(cx, cy, r, a0, a1, wid, col) {
+  if (SM <= 0) return;
+  const n = 9, ga = c.globalAlpha;
+  c.beginPath();
+  for (let i = 0; i <= n; i++) { const f = i / n, an = a0 + (a1 - a0) * f; c[i ? 'lineTo' : 'moveTo'](cx + Math.cos(an) * r, cy + Math.sin(an) * r); }
+  for (let i = n; i >= 0; i--) { const f = i / n, an = a0 + (a1 - a0) * f, rr = r - wid * f; c.lineTo(cx + Math.cos(an) * rr, cy + Math.sin(an) * rr); }
+  c.closePath(); c.globalAlpha = ga * .6; c.fillStyle = col || '#ffffff'; c.fill(); c.globalAlpha = ga;
+}
+// straight smear from (x0,y0) (thin) to (x1,y1) (thick)
+function streak(x0, y0, x1, y1, wid, col) {
+  if (SM <= 0) return;
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l * wid / 2, ny = dx / l * wid / 2, ga = c.globalAlpha;
+  c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1 + nx, y1 + ny); c.lineTo(x1 - nx, y1 - ny); c.closePath();
+  c.globalAlpha = ga * .55; c.fillStyle = col || '#ffffff'; c.fill(); c.globalAlpha = ga;
 }
 function brow(x, y, dir, s) { s = s || 1; ln([x - 2.6 * s, y - dir * 1.2 * s, x + 2.6 * s, y + dir * 1.2 * s], INK, 1.7); }
 function smile(x, y, wd, col) { ln([x - wd, y, x, y + wd * .8, x + wd, y], col || INK, 1.4); }
@@ -152,17 +193,45 @@ function glow(x, y, r, col, al) {
 // ---------- registry + the one entry point everything else uses ----------
 const CREATURE_ART = {};
 
-// pose: { atk: 0..1 | 0, moving: bool, seed: number }
+// work out the wind / strike curves for attack progress p and the list of beat times
+function beatCurves(p, beats) {
+  WD = SK = SM = 0; BI = -1;
+  const n = beats.length;
+  for (let i = 0; i < 6; i++) { BW[i] = 0; BS[i] = 0; }
+  if (!(p > 0)) return;
+  for (let i = 0; i < n; i++) {
+    const b = beats[i], a0 = i === 0 ? 0 : (beats[i - 1] + b) / 2, e = i === n - 1 ? 1 : (b + beats[i + 1]) / 2;
+    if (p < a0 || p > e) continue;
+    let w = 0, k = 0;
+    if (p < b) {
+      const q = (p - a0) / (b - a0 || 1);
+      if (q < .66) w = Ease.outCubic(q / .66);
+      else { const r = (q - .66) / .34; w = 1 - r * r; k = r * r * r; if (r > .12) SM = 1; }
+    } else {
+      const q = (p - b) / (e - b || 1);
+      k = q < .2 ? 1 : 1 - Ease.inOut((q - .2) / .8);
+      if (q < .09) SM = 1;
+    }
+    BI = i; WD = w; SK = k; BW[i] = w; BS[i] = k;
+  }
+}
+
+// pose: { atk: 0..1 | 0, hit: when the blow lands (0..1), beats: [..] for multi-hit moves, hurt: 0..1, moving, seed }
+// returns the creature-space point its move comes from (or null)
 function drawCreature(ctx, id, time, pose) {
   c = ctx; pose = pose || {};
   const seed = pose.seed || 0;
   T = time + seed * 7.31;
   AT = pose.atk || 0; AP = AT > 0 ? Math.sin(AT * PI) : 0;
+  beatCurves(AT, pose.beats || [pose.hit || .45]);
+  HU = pose.hurt || 0;
   MV = pose.moving ? 1 : 0; ST = MV ? Math.sin(T * 13) : 0;
   W = Math.sin(T * 3); TW = Math.sin(T * 5.2);
   BK = !pose.noBlink && ((T * .37 + seed) % 1) > .955;
-  if (pose.shut) BK = true;
+  if (pose.shut || HU > .35) BK = true;
   LW = 2; INK = '#2b2238';
   c.lineJoin = 'round'; c.lineCap = 'round';
+  ROOT = c.getTransform ? c.getTransform() : null; ROOTI = null; ANC = null;
   CREATURE_ART[id]();
+  return ANC;
 }

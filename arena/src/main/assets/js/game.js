@@ -62,7 +62,8 @@ class Game {
       adx: 0, ady: s === 0 ? -1 : 1, adist: 0, aC: 0, aD: 0,
       flash: 0, kx: 0, ky: 0, kz: 0, z: 0,
       burn: 0, poison: 0, chill: 0, stun: 0, stunKind: 'daze', stunImm: 0, root: 0, curse: 0, shield: 0, shieldT: 0,
-      dealt: 0, kos: 0, emitT: 0
+      dealt: 0, kos: 0, emitT: 0,
+      rec: 0, recT: 1, rx: 0, ry: 0, freeze: 0, anc: null      // flinch, hit-stop, and where its move leaves its body
     };
     this.units.push(u); this.stats.sent[s]++; this.empty[s] = 0;
     const tc = this.teams[s].c1, fx = this.fx;
@@ -117,6 +118,12 @@ class Game {
           ctx.fillStyle = '#ff7a9a'; ctx.beginPath(); ctx.arc(x, y, 2, 0, TAU); ctx.fill();
         } });
       }
+      // the target flinches away from the blow, and a solid hit freezes both for a beat
+      const hx = tg.x - (src.x + src.ox), hy = tg.y - (src.y + src.oy), hl = Math.hypot(hx, hy) || 1, heavy = Math.min(1, d / (tg.maxHp * .035));
+      tg.rx = hx / hl; tg.ry = hy / hl; tg.rec = Math.min(1.25, (.4 + heavy * .6) * (m > 1 ? 1.25 : 1)); tg.recT = 0;
+      const stop = .018 + heavy * .04;
+      tg.freeze = Math.max(tg.freeze, stop);
+      if (src.state === 'active' && src.atkT >= 0 && hl < (src.r + tg.r) * 2.4) src.freeze = Math.max(src.freeze, stop);
       this.emit('hit', { tg, m, d });
     }
     if (tg.hp <= 0) this.ko(tg, src);
@@ -201,6 +208,9 @@ class Game {
   updateUnit(u, dt) {
     u.age += dt; u.st += dt;
     u.flash = Math.max(0, u.flash - dt * 8);
+    if (u.recT < 1) u.recT += dt;
+    // hit-stop: both creatures hold their pose for an instant when a blow lands, which gives it weight
+    if (u.freeze > 0 && u.state === 'active') { u.freeze -= dt; return; }
     u.ox = u.oy = u.lift = u.rot = 0; u.sx = u.sy = 1; u.hide = false; u.al = 1; u.pivot = false; u.flip = false;
     u.moving = false;
     if (u.state === 'deploy') { if (u.st >= RULES.DEPLOY) { u.state = 'active'; u.st = 0; } return; }

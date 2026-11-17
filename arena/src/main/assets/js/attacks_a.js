@@ -49,7 +49,7 @@ function burrowHole(fx, x, y) {
 ATTACKS.furnox = { dur: .8, at: .46,                        // Furnace Ram
   pose(u, k) { ram(u, k, 7, 15, .46); const w = Ease.hump(Ease.seg(k, 0, .3)); u.sy = 1 - w * .1; u.sx = 1 + w * .06; },
   start(G, u) {
-    charge(G, u, .8 * .3, () => muzzle(u, 12, 36), 13);
+    charge(G, u, .8 * .3, () => emit(u, 12, 36), 13);
     G.fx.burst(u.x - u.adx * 10, u.y, 3, { col: 'rgba(190,165,130,.7)', shape: 'p', spd: 20, life: .5, size: 4, grow: 8, flat: .5 });
   },
   tick(G, u, k, dt) {
@@ -73,37 +73,29 @@ ATTACKS.furnox = { dur: .8, at: .46,                        // Furnace Ram
       }
     } });
     shock(fx, x, y, 5, 24, .32, '#ff8a2a');
-    impact(G, 'fire', x, y, 1.25, tg.x, tg.y);
+    impact(G, 'fire', x, y, 1.25, tg.x, tg.y, aim(u));
     G.shake(2.5); G.hit(u, tg, u.sp.dmg);
   } };
 
-ATTACKS.blazaroo = { dur: .7, at: .2,                       // Blaze Jabs
-  pose(u, k) { lunge(u, k, 7, .3); u.lift = Math.abs(Math.sin(k * PI * 2)) * 3; },
-  start(G, u) { const m = muzzle(u, 13, 16); flare(G.fx, m.x, m.y, 13, '#ff8a2a', .22); },
+ATTACKS.blazaroo = { dur: .7, at: .34, beats: [.34, .66],      // Blaze Jabs: the fists themselves do the work
+  pose(u, k) { lunge(u, k, 7, .34); u.lift = Math.abs(Math.sin(k * PI * 2)) * 2.5; },
   fire(G, u, tg) {
     const fx = G.fx;
     const jab = i => {
       if (tg.state !== 'active' || u.state !== 'active') return;
-      const x = bodyX(tg) + rnd(-3, 3), y = bodyY(tg) + (i ? 6 : -5), m = muzzle(u, 6, i ? 11 : 18), an = Math.atan2(y - m.y, x - m.x), tr = [];
-      // a fist of flame streaking in, dragging a ribbon of fire behind it
-      fx.add({ dur: .16, draw(ctx, k) {
-        const e = Ease.outCubic(k), hx = lerp(m.x, x, e), hy = lerp(m.y, y, e);
-        tr.push(hx, hy);
-        ctx.globalCompositeOperation = 'lighter'; ribbon(ctx, tr, 9, '#ff5a2a', .9); ribbon(ctx, tr, 4, '#ffd23d', 1); ctx.globalCompositeOperation = 'source-over';
-        halo(ctx, hx, hy, 13, '#ff8a2a', .9);
-        ctx.translate(hx, hy); ctx.rotate(an);
-        flameTongue(ctx, -16, 6, '#ff5a2a'); flameTongue(ctx, -10, 3.6, '#ffd23d');
-        ctx.beginPath(); ctx.arc(1, 0, 4.4, 0, TAU); ctx.fillStyle = '#ff5a3a'; ctx.fill();
-        ctx.beginPath(); ctx.arc(1.6, -.6, 2.4, 0, TAU); ctx.fillStyle = '#fff3a8'; ctx.fill();
+      const m = emit(u, 20, i ? 15 : 19), an = aim(u), x = bodyX(tg), y = bodyY(tg) + (i ? 4 : -4);
+      // a lick of flame bursts off the glove along the line of the punch
+      fx.add({ dur: .2, draw(ctx, k) {
+        const l = (9 + Ease.outCubic(k) * (i ? 17 : 12)), w = (i ? 5.5 : 4.2) * Ease.hump(Math.min(1, k * 1.3));
+        ctx.translate(m.x, m.y); ctx.rotate(an); ctx.globalAlpha = 1 - k * k;
+        flameTongue(ctx, l, w, '#ff5a2a'); flameTongue(ctx, l * .66, w * .58, '#ffd23d'); flameTongue(ctx, l * .34, w * .28, '#fff7c0');
       } });
-      fx.after(.1, () => {
-        fx.pow(x, y, i ? 12 : 9, '#ff5a2a', '#fff3a8');
-        impact(G, 'fire', x, y, i ? .95 : .65, tg.x, tg.y);
-        if (i) G.shake(1.5);
-        G.hit(u, tg, u.sp.dmg);
-      });
+      fx.pow(x - u.adx * 6, y - u.ady * 6, i ? 10 : 7.5, '#ff5a2a', '#fff3a8');
+      impact(G, 'fire', x, y, i ? .95 : .6, tg.x, tg.y, an);
+      if (i) G.shake(2);
+      G.hit(u, tg, u.sp.dmg);
     };
-    jab(0); fx.after(.22, () => jab(1));
+    jab(0); fx.after((.66 - .34) * .7, () => jab(1));
   } };
 
 ATTACKS.flarret = { dur: .62, at: .32, commit: true,        // Comet Dash
@@ -120,10 +112,10 @@ ATTACKS.flarret = { dur: .62, at: .32, commit: true,        // Comet Dash
     const fx = G.fx, x0 = u.x, y0 = u.y - u.r * .8, x1 = u.x + u.adx * u.aD, y1 = u.y + u.ady * u.aD - u.r * .8;
     fx.add({ dur: .44, draw(ctx, k) {
       const gr = ctx.createLinearGradient(x0, y0, x1, y1);
-      gr.addColorStop(0, 'rgba(255,120,40,0)'); gr.addColorStop(.7, 'rgba(255,150,50,' + (.55 * (1 - k)) + ')'); gr.addColorStop(1, 'rgba(255,225,150,' + (.7 * (1 - k)) + ')');
-      ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = gr; ctx.lineWidth = 10 * (1 - k * .6); ctx.lineCap = 'round';
+      gr.addColorStop(0, 'rgba(255,120,40,0)'); gr.addColorStop(.7, 'rgba(255,140,45,' + (.42 * (1 - k)) + ')'); gr.addColorStop(1, 'rgba(255,215,140,' + (.55 * (1 - k)) + ')');
+      ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = gr; ctx.lineWidth = 7 * (1 - k * .6); ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-      ctx.lineWidth = 4 * (1 - k * .6); ctx.stroke();
+      ctx.lineWidth = 2.4 * (1 - k * .6); ctx.stroke();
     } });
     const x = bodyX(tg), y = bodyY(tg), an = Math.atan2(u.ady, u.adx);
     // the ring of fire the comet punches through
@@ -133,25 +125,25 @@ ATTACKS.flarret = { dur: .62, at: .32, commit: true,        // Comet Dash
       ctx.beginPath(); ctx.ellipse(0, 0, r * .42, r, 0, 0, TAU);
       ctx.strokeStyle = '#ff7a2a'; ctx.lineWidth = 5.5 * (1 - k * .6); ctx.stroke(); ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 1.8; ctx.stroke();
     } });
-    impact(G, 'fire', x, y, 1.1, tg.x, tg.y);
+    impact(G, 'fire', x, y, 1.1, tg.x, tg.y, aim(u));
     G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.solcub = { dur: .88, at: .52,                       // Solar Flare
   pose(u, k) { u.sy = 1 + Ease.hump(Ease.seg(k, .1, .6)) * .08; lunge(u, k, -3, .5); },
   start(G, u) {
-    charge(G, u, .88 * .5, () => muzzle(u, 6, 47), 22);
+    charge(G, u, .88 * .5, () => emit(u, 6, 47), 22);
     // a little sun swells above its mane
     G.fx.add({ dur: .88 * .52, draw(ctx, k) {
       if (u.state !== 'active') return;
-      const m = muzzle(u, 6, 47), r = 2 + Ease.outCubic(k) * 6;
+      const m = emit(u, 6, 47), r = 2 + Ease.outCubic(k) * 6;
       ctx.translate(m.x, m.y); ctx.rotate(k * 3); ctx.fillStyle = '#ffd23d';
       for (let i = 0; i < 10; i++) { ctx.rotate(TAU / 10); ctx.beginPath(); ctx.moveTo(-1.4, r); ctx.lineTo(0, r + 3 + k * 5); ctx.lineTo(1.4, r); ctx.fill(); }
       ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fillStyle = '#fff3a8'; ctx.fill(); ctx.strokeStyle = '#ff9a2e'; ctx.lineWidth = 1; ctx.stroke();
     } });
   },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 6, 47);
+    const fx = G.fx, m = emit(u, 6, 47);
     let ex = bodyX(tg), ey = bodyY(tg);
     fx.add({ dur: .46,
       update() { if (tg.state === 'active') { ex = bodyX(tg); ey = bodyY(tg); } },
@@ -170,7 +162,7 @@ ATTACKS.solcub = { dur: .88, at: .52,                       // Solar Flare
         ctx.beginPath(); ctx.arc(0, 0, 7, 0, TAU); ctx.fillStyle = '#fff7c0'; ctx.fill();
       } });
     cross(fx, m.x, m.y, 22, '#fff7c0', .3);
-    impact(G, 'fire', ex, ey, .9, tg.x, tg.y);
+    impact(G, 'fire', ex, ey, .9, tg.x, tg.y, aim(u));
     for (let i = 1; i < 5; i++) fx.p({ x: lerp(m.x, ex, i / 5), y: lerp(m.y, ey, i / 5), life: .45, size: 3.6, col: '#ffffff', shape: 's', vr: 6 });
     G.hit(u, tg, u.sp.dmg);
   } };
@@ -178,7 +170,7 @@ ATTACKS.solcub = { dur: .88, at: .52,                       // Solar Flare
 ATTACKS.campyre = { dur: .95, at: .5,                       // Bonfire Ring
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .1, .6)); u.sy = 1 + p * .16; u.sx = 1 - p * .06; },
   start(G, u, tg) {
-    charge(G, u, .95 * .45, () => muzzle(u, 0, 32), 18);
+    charge(G, u, .95 * .45, () => emit(u, 0, 32), 18);
     const R = u.sp.aoe;
     // a dotted circle of embers warns where the bonfire will rise
     G.fx.add({ dur: .95 * .5, ground: true, draw(ctx, k) {
@@ -234,7 +226,7 @@ ATTACKS.walrump = { dur: .95, at: .5,                       // Tidal Flop
       }
     } });
     shock(fx, x, y, 6, R, .45, '#7ac8ff', true);
-    impact(G, 'water', x, y - 4, 1.6, x, y);
+    impact(G, 'water', x, y - 4, 1.6, x, y, aim(u));
     for (let i = 0; i < 12; i++) { const an = i / 12 * TAU; fx.p({ x: x + Math.cos(an) * 8, y: y + Math.sin(an) * 5, vx: Math.cos(an) * 60, vy: Math.sin(an) * 32 - 120, g: 320, life: .65, size: 2.8, col: pick(['#bfe6ff', '#7ac8ff', '#ffffff']), shape: 'd' }); }
     foesIn(G, u.side, x, y, R).forEach(e => impact(G, 'water', bodyX(e), bodyY(e), .55, e.x, e.y));
     G.shake(3.5); G.area(u, x, y, R, u.sp.dmg);
@@ -242,7 +234,7 @@ ATTACKS.walrump = { dur: .95, at: .5,                       // Tidal Flop
 
 ATTACKS.snipclaw = { dur: .8, at: .52,                      // Bubble Clamp
   pose(u, k) { ram(u, k, 3, 9, .52); },
-  start(G, u) { const m = muzzle(u, 20, 18); cross(G.fx, m.x, m.y, 13, '#ffffff', .3, 0, .12); },
+  start(G, u) { const m = emit(u, 20, 18); cross(G.fx, m.x, m.y, 13, '#ffffff', .3, 0, .12); },
   fire(G, u, tg) {
     const fx = G.fx, x = bodyX(tg), y = bodyY(tg), an = Math.atan2(u.ady, u.adx);
     // two pincers of water snapping shut
@@ -261,7 +253,7 @@ ATTACKS.snipclaw = { dur: .8, at: .52,                      // Bubble Clamp
     fx.after(.11, () => {
       cross(fx, x, y, 22, '#ffffff', .22);
       for (let i = 0; i < 12; i++) { const a2 = i / 12 * TAU; fx.p({ x: x + Math.cos(a2) * 4, y: y + Math.sin(a2) * 4, vx: Math.cos(a2) * 72, vy: Math.sin(a2) * 72, drag: 3, life: .65, size: rnd(2.4, 4.2), col: pick(['#bff3ff', '#ffffff']), shape: 'b' }); }
-      shock(fx, x, y, 4, 21, .3, '#7ac8ff'); impact(G, 'water', x, y, .9, tg.x, tg.y);
+      shock(fx, x, y, 4, 21, .3, '#7ac8ff'); impact(G, 'water', x, y, .9, tg.x, tg.y, aim(u));
       G.shake(2); G.hit(u, tg, u.sp.dmg);
     });
   } };
@@ -289,24 +281,24 @@ ATTACKS.zipfin = { dur: .62, at: .34, commit: true,         // Jet Lance
       for (let i = 1; i <= 5; i++) { ctx.beginPath(); ctx.ellipse(L * i / 5.5, 0, 2 + k * 4, (5 + i) * (.6 + k), 0, 0, TAU); ctx.stroke(); }
     } });
     const x = bodyX(tg), y = bodyY(tg);
-    shock(fx, x, y, 4, 22, .3, '#7ac8ff'); impact(G, 'water', x, y, 1.1, tg.x, tg.y);
+    shock(fx, x, y, 4, 22, .3, '#7ac8ff'); impact(G, 'water', x, y, 1.1, tg.x, tg.y, aim(u));
     G.hit(u, tg, u.sp.dmg);
   } };
 
-ATTACKS.inkjet = { dur: .88, at: .3,                        // Ink Burst
+ATTACKS.inkjet = { dur: .88, at: .3, beats: [.3, .436, .573],                     // Ink Burst
   pose(u, k) { const p = Math.sin(Ease.seg(k, .25, .75) * PI * 3); u.sy = 1 + p * .07; u.sx = 1 - p * .05; lunge(u, k, -3, .4); },
   start(G, u) {
     const fx = G.fx; let acc = 0;
     fx.add({ dur: .88 * .28, update(dt) {
       acc += dt; if (acc < .03 || u.state !== 'active') return; acc = 0;
-      const m = muzzle(u, 2, 10), an = rnd(TAU);
+      const m = emit(u, 2, 10), an = rnd(TAU);
       fx.p({ x: m.x + Math.cos(an) * 15, y: m.y + Math.sin(an) * 15, vx: -Math.cos(an) * 48, vy: -Math.sin(an) * 48, life: .3, size: 2.3, col: pick(['#2a2f6a', '#1c1f4d']) });
     } });
   },
   fire(G, u, tg) {
     const fx = G.fx;
     for (let i = 0; i < 3; i++) {
-      const m = muzzle(u, 2, 10);
+      const m = emit(u, 2, 10);
       fx.after(i * .12, () => fx.burst(m.x, m.y, 3, { col: '#2a2f6a', spd: 30, life: .25, size: 2 }));
       shoot(G, tg, { x: m.x, y: m.y, speed: 250, delay: i * .12, arc: 7, tail: { n: 9, w: 5.5, col: '#1c1f4d', al: .9 },
         draw(ctx, x, y, an) {
@@ -325,9 +317,9 @@ ATTACKS.inkjet = { dur: .88, at: .3,                        // Ink Burst
 
 ATTACKS.drizzelly = { dur: 1, at: .45,                      // Bubble Bloom
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .1, .6)); u.sy = 1 + p * .14; u.lift = p * 4; },
-  start(G, u) { charge(G, u, .42, () => muzzle(u, 0, 36), 18); },
+  start(G, u) { charge(G, u, .42, () => emit(u, 0, 36), 18); },
   fire(G, u, tg) {
-    const fx = G.fx, gx = tg.x, gy = tg.y, x = gx, y = gy - tg.r * .8, R = u.sp.aoe, m = muzzle(u, 0, 36);
+    const fx = G.fx, gx = tg.x, gy = tg.y, x = gx, y = gy - tg.r * .8, R = u.sp.aoe, m = emit(u, 0, 36);
     for (let i = 0; i < 7; i++) {
       const ex = x + rnd(-R * .6, R * .6), ey = y + rnd(-R * .4, R * .4), rr = rnd(4.5, 8), hue = rnd(360);
       fx.add({ dur: .56, delay: i * .05,
@@ -341,7 +333,7 @@ ATTACKS.drizzelly = { dur: 1, at: .45,                      // Bubble Bloom
         },
         end() { fx.ring(ex, ey, rr, rr * 2.4, .25, '#ffffff', 1.8); cross(fx, ex, ey, rr * 1.7, '#ffffff', .2); fx.burst(ex, ey, 5, { col: ['#bfe6ff', '#ffffff'], shape: 'd', spd: 55, life: .35, size: 1.9, g: 140 }); } });
     }
-    fx.after(.6, () => { impact(G, 'water', gx, gy - 8, .9, gx, gy); G.area(u, gx, gy, R, u.sp.dmg); });
+    fx.after(.6, () => { impact(G, 'water', gx, gy - 8, .9, gx, gy, aim(u)); G.area(u, gx, gy, R, u.sp.dmg); });
     // a gentle healing drizzle over nearby friends
     shock(fx, u.x, u.y, 8, 64, .7, '#9fe8ff', true);
     G.allies(u.side).forEach(al => {
@@ -352,45 +344,52 @@ ATTACKS.drizzelly = { dur: 1, at: .45,                      // Bubble Bloom
   } };
 
 // ===================== LEAF =====================
-ATTACKS.stumply = { dur: .95, at: .45,                      // Root Rise
+ATTACKS.stumply = { dur: .95, at: .45,                      // Root Rise: the slam sends a ripple through the ground, and roots answer
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .2, .55)); u.sy = 1 - p * .12; u.sx = 1 + p * .08; },
-  start(G, u, tg) {
-    // a ripple of earth runs along the ground toward the target
+  fire(G, u, tg) {
     const fx = G.fx, x0 = u.x, y0 = u.y;
-    for (let i = 1; i <= 4; i++) fx.after(i * .085, () => {
+    fx.burst(x0 + u.adx * 12, y0 + u.ady * 12, 5, { col: 'rgba(150,110,70,.75)', shape: 'p', spd: 24, life: .4, size: 4, grow: 8, flat: .5 });
+    G.shake(1.5);
+    // a hump of earth runs along the ground from its fists to the target
+    for (let i = 1; i <= 4; i++) fx.after(i * .045, () => {
       if (tg.state !== 'active') return;
       const px = lerp(x0, tg.x, i / 5), py = lerp(y0, tg.y, i / 5);
-      fx.burst(px, py, 2, { col: 'rgba(150,110,70,.75)', shape: 'p', spd: 14, life: .4, size: 3.4, grow: 7, flat: .5 });
-      fx.add({ dur: .5, ground: true, draw(ctx, k) { ctx.globalAlpha = 1 - k; ctx.fillStyle = '#8a623a'; ctx.beginPath(); ctx.ellipse(px, py, 6.5, 3.4 * Ease.hump(k) + 1, 0, PI, TAU); ctx.fill(); } });
+      fx.burst(px, py, 2, { col: 'rgba(150,110,70,.7)', shape: 'p', spd: 12, life: .35, size: 3, grow: 6, flat: .5 });
+      fx.add({ dur: .42, ground: true, draw(ctx, k) {
+        ctx.globalAlpha = 1 - k; ctx.fillStyle = '#8a623a'; ctx.beginPath(); ctx.ellipse(px, py, 6.5, 3.6 * Ease.hump(k) + 1, 0, PI, TAU); ctx.fill();
+        ctx.strokeStyle = '#5a3d1e'; ctx.lineWidth = 1; ctx.stroke();
+      } });
     });
-  },
-  fire(G, u, tg) {
-    const fx = G.fx, x = tg.x, y = tg.y;
-    fx.burst(x, y, 7, { col: 'rgba(150,110,70,.8)', shape: 'p', spd: 32, life: .45, size: 4.4, grow: 9, flat: .5 });
-    fx.burst(x, y, 6, { col: ['#8a623a', '#6a4826'], shape: 'q', spd: 60, life: .5, size: 2.6, up: 75, g: 380, vr: 10 });
-    fx.add({ dur: 1.25, draw(ctx, k) {
-      const g = k < .2 ? Ease.outBack(k / .2) : k > .8 ? 1 - (k - .8) / .2 : 1, bloom = Ease.seg(k, .28, .5) * (k > .8 ? 1 - (k - .8) / .2 : 1);
-      ctx.translate(x, y); ctx.lineCap = 'round';
-      for (let i = 0; i < 5; i++) {
-        const s = i % 2 ? 1 : -1, bx = (i - 2) * 6.5, h = (20 + (i % 3) * 5) * g, tx = bx + s * 3, ty = -h;
-        ctx.beginPath(); ctx.moveTo(bx, 0); ctx.bezierCurveTo(bx + s * 12, -h * .4, bx - s * 10, -h * .8, tx, ty);
-        ctx.strokeStyle = '#4a2f14'; ctx.lineWidth = 5.8; ctx.stroke(); ctx.strokeStyle = '#a8743c'; ctx.lineWidth = 3.3; ctx.stroke(); ctx.strokeStyle = '#d6a868'; ctx.lineWidth = 1; ctx.stroke();
-        if (bloom > 0) {   // leaves unfurl, and the middle root flowers
-          ctx.fillStyle = '#5fd060'; ctx.beginPath(); ctx.ellipse(tx + s * 4, ty - 1, 4.6 * bloom, 2.2 * bloom, s * .6, 0, TAU); ctx.fill();
-          ctx.fillStyle = '#8fe87a'; ctx.beginPath(); ctx.ellipse(tx - s * 3, ty + 2, 3.5 * bloom, 1.7 * bloom, -s * .7, 0, TAU); ctx.fill();
-          if (i === 2) {
-            ctx.save(); ctx.translate(tx, ty - 3); ctx.rotate(k * 2);
-            for (let p = 0; p < 5; p++) { ctx.rotate(TAU / 5); ctx.fillStyle = '#ff9ac0'; ctx.beginPath(); ctx.ellipse(3.3 * bloom, 0, 2.7 * bloom, 1.7 * bloom, 0, 0, TAU); ctx.fill(); }
-            ctx.fillStyle = '#ffe27a'; ctx.beginPath(); ctx.arc(0, 0, 1.7 * bloom, 0, TAU); ctx.fill(); ctx.restore();
+    fx.after(.24, () => {
+      if (tg.state !== 'active') return;
+      const x = tg.x, y = tg.y;
+      fx.burst(x, y, 6, { col: 'rgba(150,110,70,.8)', shape: 'p', spd: 30, life: .45, size: 4.2, grow: 9, flat: .5 });
+      fx.burst(x, y, 6, { col: ['#8a623a', '#6a4826'], shape: 'q', spd: 60, life: .5, size: 2.6, up: 75, g: 380, vr: 10 });
+      // roots twist up around the target; leaves unfurl, and the middle one flowers
+      fx.add({ dur: 1.25, draw(ctx, k) {
+        const g = k < .2 ? Ease.outBack(k / .2) : k > .8 ? 1 - (k - .8) / .2 : 1, bloom = Ease.seg(k, .28, .5) * (k > .8 ? 1 - (k - .8) / .2 : 1);
+        ctx.translate(x, y); ctx.lineCap = 'round';
+        for (let i = 0; i < 5; i++) {
+          const s = i % 2 ? 1 : -1, bx = (i - 2) * 6.5, h = (20 + (i % 3) * 5) * g, tx = bx + s * 3, ty = -h;
+          ctx.beginPath(); ctx.moveTo(bx, 0); ctx.bezierCurveTo(bx + s * 12, -h * .4, bx - s * 10, -h * .8, tx, ty);
+          ctx.strokeStyle = '#4a2f14'; ctx.lineWidth = 5.6; ctx.stroke(); ctx.strokeStyle = '#a8743c'; ctx.lineWidth = 3.2; ctx.stroke(); ctx.strokeStyle = '#d6a868'; ctx.lineWidth = .9; ctx.stroke();
+          if (bloom > 0) {
+            ctx.fillStyle = '#5fd060'; ctx.beginPath(); ctx.ellipse(tx + s * 4, ty - 1, 4.6 * bloom, 2.2 * bloom, s * .6, 0, TAU); ctx.fill();
+            ctx.fillStyle = '#8fe87a'; ctx.beginPath(); ctx.ellipse(tx - s * 3, ty + 2, 3.5 * bloom, 1.7 * bloom, -s * .7, 0, TAU); ctx.fill();
+            if (i === 2) {
+              ctx.save(); ctx.translate(tx, ty - 3); ctx.rotate(k * 2);
+              for (let p = 0; p < 5; p++) { ctx.rotate(TAU / 5); ctx.fillStyle = '#ff9ac0'; ctx.beginPath(); ctx.ellipse(3.3 * bloom, 0, 2.7 * bloom, 1.7 * bloom, 0, 0, TAU); ctx.fill(); }
+              ctx.fillStyle = '#ffe27a'; ctx.beginPath(); ctx.arc(0, 0, 1.7 * bloom, 0, TAU); ctx.fill(); ctx.restore();
+            }
           }
         }
-      }
-    } });
-    impact(G, 'leaf', bodyX(tg), bodyY(tg), .9);
-    G.shake(1.5); G.hit(u, tg, u.sp.dmg);
+      } });
+      impact(G, 'leaf', bodyX(tg), bodyY(tg), .85);
+      G.hit(u, tg, u.sp.dmg);
+    });
   } };
 
-ATTACKS.brambear = { dur: .86, at: .25,                     // Thorn Swipe
+ATTACKS.brambear = { dur: .86, at: .25, beats: [.25, .413, .576],                   // Thorn Swipe
   pose(u, k) { lunge(u, k, 8, .35); u.rot = Math.sin(k * PI * 3) * .12; },
   fire(G, u, tg) {
     const fx = G.fx, base = Math.atan2(u.ady, u.adx);
@@ -409,7 +408,7 @@ ATTACKS.brambear = { dur: .86, at: .25,                     // Thorn Swipe
         }
       } });
       for (let j = 0; j < 4; j++) { const a2 = rot - PI / 2 + rnd(-.6, .6), v = rnd(90, 150); fx.p({ x, y, vx: Math.cos(a2) * v, vy: Math.sin(a2) * v, life: .3, size: 2.6, col: '#eaffd0', shape: 'k' }); }
-      impact(G, 'leaf', x, y, i === 2 ? .85 : .5);
+      impact(G, 'leaf', x, y, i === 2 ? .85 : .5, undefined, undefined, aim(u));
       if (i === 2) G.shake(1.5);
       G.hit(u, tg, u.sp.dmg);
       if (u.state === 'active') G.heal(u, u.sp.selfHeal, '#7fe070', true);
@@ -442,19 +441,19 @@ ATTACKS.cloverbun = { dur: .72, at: .42,                    // Lucky Kick
       } });
       fx.text(x, y - 30, 'LUCKY!', '#ffd23d', 10); cross(fx, x, y, 26, '#fff7c0', .3); G.shake(2.5);
     }
-    impact(G, 'leaf', x, y, crit ? 1.2 : .85);
+    impact(G, 'leaf', x, y, crit ? 1.2 : .85, undefined, undefined, aim(u));
     G.hit(u, tg, u.sp.dmg * (crit ? 2 : 1));
   } };
 
 ATTACKS.bloomerang = { dur: .9, at: .28,                    // Petal-rang
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .1, .45)); u.rot = -p * .25; lunge(u, k, 3, .3); },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, 8, 14), tr = [];
+    const fx = G.fx, m = emit(u, 8, 14), tr = [];
     let ex = bodyX(tg), ey = bodyY(tg), h1 = false, h2 = false, acc = 0;
     const strike = (dmg, s) => {
       if (tg.state !== 'active') return;
       fx.burst(ex, ey, 6, { col: ['#ff8fb8', '#ffb3cf', '#ffe27a'], shape: 'l', spd: 75, life: .6, size: 3.2, vr: 9, drag: 1.5, g: 40 });
-      fx.pow(ex, ey, 8 * s, '#ff8fb8', '#ffffff'); impact(G, 'leaf', ex, ey, .6 * s); G.hit(u, tg, dmg);
+      fx.pow(ex, ey, 8 * s, '#ff8fb8', '#ffffff'); impact(G, 'leaf', ex, ey, .6 * s, undefined, undefined, aim(u)); G.hit(u, tg, dmg);
     };
     fx.add({ dur: .88, px: m.x, py: m.y,
       update(dt, k, it) {
@@ -480,7 +479,7 @@ ATTACKS.bloomerang = { dur: .9, at: .28,                    // Petal-rang
 
 ATTACKS.sporel = { dur: .95, at: .45,                       // Healing Spores
   pose(u, k) { const p = Ease.seg(k, .15, .7); u.sy = 1 + Math.sin(p * PI * 2) * .08; u.lift = Ease.hump(Ease.seg(k, .3, .6)) * 5; },
-  start(G, u) { charge(G, u, .95 * .42, () => muzzle(u, 0, 27), 16); },
+  start(G, u) { charge(G, u, .95 * .42, () => emit(u, 0, 27), 16); },
   fire(G, u, tg) {
     const fx = G.fx, R = u.sp.healR;
     for (let i = 0; i < 18; i++) { const an = rnd(TAU), d = rnd(6, R * .9); fx.p({ x: u.x + Math.cos(an) * 8, y: u.y - 22 + Math.sin(an) * 4, vx: Math.cos(an) * d * 1.6, vy: Math.sin(an) * d * .9 - 25, drag: 2.2, g: -12, life: rnd(.8, 1.3), size: rnd(1.6, 2.8), col: pick(['#c8ff9a', '#fff7a8', '#9af0a0']), shape: 'g' }); }
@@ -490,10 +489,10 @@ ATTACKS.sporel = { dur: .95, at: .45,                       // Healing Spores
       G.heal(al, u.sp.heal, '#9af0a0');
       fx.burst(al.x, al.y - al.r, 4, { col: ['#c8ff9a', '#fff7a8'], shape: 'g', spd: 18, life: .8, size: 2.2, up: 30, g: -20, jit: al.r * .6 });
     });
-    const m = muzzle(u, 0, 30);
+    const m = emit(u, 0, 30);
     shoot(G, tg, { x: m.x, y: m.y, speed: 150, arc: 15, tail: { n: 10, w: 5, col: '#c8ff9a', add: true, al: .7 }, glow: { r: 10, col: '#c8ff9a' },
       draw(ctx, x, y, an, k) { for (let i = 0; i < 3; i++) { const a2 = k * 8 + i * 2.1; ctx.fillStyle = i ? '#c8ff9a' : '#fff7a8'; ctx.beginPath(); ctx.arc(x + Math.cos(a2) * 3.2, y + Math.sin(a2) * 3.2, 2.5, 0, TAU); ctx.fill(); } },
-      hit(t, x, y) { fx.burst(x, y, 6, { col: ['rgba(200,255,154,.7)', 'rgba(255,247,168,.7)'], shape: 'p', spd: 30, life: .55, size: 4.4, grow: 7 }); impact(G, 'leaf', x, y, .6); if (t) G.hit(u, t, u.sp.dmg); } });
+      hit(t, x, y) { fx.burst(x, y, 6, { col: ['rgba(200,255,154,.7)', 'rgba(255,247,168,.7)'], shape: 'p', spd: 30, life: .55, size: 4.4, grow: 7 }); impact(G, 'leaf', x, y, .6, undefined, undefined, aim(u)); if (t) G.hit(u, t, u.sp.dmg); } });
   } };
 
 // ===================== SPARK =====================
@@ -517,22 +516,22 @@ ATTACKS.ohmadillo = { dur: .88, at: .55, commit: true,      // Static Roll
   },
   fire(G, u, tg) {
     const fx = G.fx, x = bodyX(tg), y = bodyY(tg);
-    for (let i = 0; i < 7; i++) { const an = i / 7 * TAU + rnd(.3); lightning(fx, x, y, x + Math.cos(an) * 24, y + Math.sin(an) * 24, { segs: 4, jit: 4.5, wid: 1.7, dur: .22 }); }
-    shock(fx, x, y, 4, 24, .3, '#ffe14a'); impact(G, 'spark', x, y, 1.2, tg.x, tg.y);
+    for (let i = 0; i < 5; i++) { const an = i / 5 * TAU + rnd(.3); lightning(fx, x, y, x + Math.cos(an) * 19, y + Math.sin(an) * 19, { segs: 4, jit: 4, wid: 1.4, dur: .2 }); }
+    shock(fx, x, y, 4, 24, .3, '#ffe14a'); impact(G, 'spark', x, y, 1.2, tg.x, tg.y, aim(u));
     for (let i = 0; i < 3; i++) fx.after(.16 + i * .1, () => { if (tg.state === 'active') fx.p({ x: bodyX(tg) + rnd(-9, 9), y: bodyY(tg) + rnd(-9, 9), life: .18, size: 3.4, col: '#fff7b0', shape: 'z', rot: rnd(TAU) }); });
     G.shake(2.5); G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.zapcoon = { dur: .64, at: .42,                      // Tail Taser
   pose(u, k) { lunge(u, k, 6, .42); u.rot = Ease.inOut(Ease.seg(k, .15, .62)) * TAU; u.pivot = true; },
-  start(G, u) { const m = muzzle(u, -14, 20); flare(G.fx, m.x, m.y, 12, '#ffe14a', .25); },
+  start(G, u) { const m = emit(u, -14, 20); flare(G.fx, m.x, m.y, 12, '#ffe14a', .25); },
   fire(G, u, tg) {
     const fx = G.fx, x = bodyX(tg), y = bodyY(tg), cx = u.x + u.ox, cy = u.y + u.oy - u.r, an = Math.atan2(y - cy, x - cx), R = dist2(cx, cy, x, y) + 3;
     // the charged tail whips round in a glowing arc, with two fading echoes behind it
     for (let e = 0; e < 3; e++) fx.add({ dur: .28, delay: e * .045, draw(ctx, k) {
       const head = an - 1.3 + 2.6 * Ease.outCubic(k), tail = an - 1.3 + 2.6 * Ease.outCubic(Math.max(0, k * 1.5 - .5));
       ctx.beginPath(); ctx.arc(cx, cy, R - e * 3, tail, head); ctx.lineCap = 'round';
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * (e ? .3 : .7); ctx.strokeStyle = '#ffd23d'; ctx.lineWidth = 11 - e * 2; ctx.stroke();
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * (e ? .22 : .45); ctx.strokeStyle = '#ffd23d'; ctx.lineWidth = 7 - e * 1.5; ctx.stroke();
       if (!e) { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1 - k * k; ctx.strokeStyle = '#fffbd0'; ctx.lineWidth = 3.4; ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.3; ctx.stroke(); }
     } });
     fx.add({ dur: .28, draw(ctx, k) {
@@ -540,7 +539,7 @@ ATTACKS.zapcoon = { dur: .64, at: .42,                      // Tail Taser
       for (let i = 0; i <= 10; i++) { const a2 = an - 1.2 + 2.4 * i / 10, rr = R + (i % 2 ? 4.4 : -3.4) + rnd(-1.5, 1.5); ctx[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a2) * rr, cy + Math.sin(a2) * rr); }
       ctx.stroke();
     } });
-    impact(G, 'spark', x, y, 1, tg.x, tg.y);
+    impact(G, 'spark', x, y, 1, tg.x, tg.y, aim(u));
     G.shake(1.5); G.hit(u, tg, u.sp.dmg);
   } };
 
@@ -556,13 +555,13 @@ ATTACKS.dynafly = { dur: .52, at: .3, commit: true,         // Zigzag Strike
     const fx = G.fx, x0 = u.x, y0 = u.y - u.r * 1.5, D = u.aD, pts = [x0, y0];
     for (let i = 1; i <= 4; i++) { const f = i / 4, side = (i % 2 ? 1 : -1) * (i === 4 ? 0 : 11); pts.push(x0 + u.adx * D * f - u.ady * side, y0 + u.ady * D * f + u.adx * side); }
     fx.add({ dur: .38, draw(ctx, k) {
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * .6; strokePts(ctx, pts, '#ffd23d', 9 * (1 - k * .5));
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * .38; strokePts(ctx, pts, '#ffd23d', 6 * (1 - k * .5));
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1 - k * k; strokePts(ctx, pts, '#fffbd0', 3); strokePts(ctx, pts, '#ffffff', 1.2);
     } });
     for (let i = 2; i < pts.length - 2; i += 2) { cross(fx, pts[i], pts[i + 1], 11, '#bffff5', .3, .4, i * .012); fx.p({ x: pts[i], y: pts[i + 1], life: .5, size: 2.6, col: '#3de0c8', shape: 'g' }); }
     for (let i = 0; i < 6; i++) { const f = rnd(0, 1), j = Math.min(3, Math.floor(f * 4)), q = f * 4 - j; fx.p({ x: lerp(pts[j * 2], pts[j * 2 + 2], q), y: lerp(pts[j * 2 + 1], pts[j * 2 + 3], q), vy: -10, life: .6, size: 1.9, col: pick(['#fff7b0', '#7af0ff']), shape: 'g' }); }
     const x = bodyX(tg), y = bodyY(tg);
-    impact(G, 'spark', x, y, 1, tg.x, tg.y);
+    impact(G, 'spark', x, y, 1, tg.x, tg.y, aim(u));
     G.hit(u, tg, u.sp.dmg);
   } };
 
@@ -601,13 +600,13 @@ ATTACKS.teslowl = { dur: .8, at: .5,                        // Arc Bolt
         ctx.stroke();
       }
     } });
-    impact(G, 'spark', x, y, 1.1, tg.x, tg.y);
+    impact(G, 'spark', x, y, 1.1, tg.x, tg.y, aim(u));
     G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.nimbolt = { dur: .9, at: .45,                       // Thunderclap
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .1, .55)); u.sx = 1 + p * .15; u.sy = 1 - p * .08; if (k > .4 && k < .6) u.ox = Math.sin(k * 120) * 1.2; },
-  start(G, u) { charge(G, u, .9 * .42, () => muzzle(u, 0, 18), 17); },
+  start(G, u) { charge(G, u, .9 * .42, () => emit(u, 0, 18), 17); },
   fire(G, u, tg) {
     const fx = G.fx, cx = bodyX(tg), cy = bodyY(tg) - 54;
     let acc = 0;
@@ -628,7 +627,7 @@ ATTACKS.nimbolt = { dur: .9, at: .45,                       // Thunderclap
       lightning(fx, x + rnd(-4, 4), y - 50, x, y, { segs: 7, jit: 8, wid: 3.8, dur: .3 });
       lightning(fx, x + rnd(-3, 3), y - 28, x + rnd(-22, 22), y - 6, { segs: 3, jit: 5, wid: 1.4, dur: .2 });
       groundGlow(fx, tg.x, tg.y, 44, '#ffe14a', .35, .9); shock(fx, tg.x, tg.y, 4, 26, .34, '#ffe14a', true);
-      impact(G, 'spark', x, y, 1.3, tg.x, tg.y); decal(fx, tg.x, tg.y, 11, 'scorch');
+      impact(G, 'spark', x, y, 1.3, tg.x, tg.y, aim(u)); decal(fx, tg.x, tg.y, 11, 'scorch');
       G.shake(3); G.hit(u, tg, u.sp.dmg);
       let prev = tg; const used = [tg];
       for (let i = 0; i < u.sp.chain; i++) {
@@ -679,34 +678,22 @@ ATTACKS.cobblem = { dur: .98, at: .5,                       // Quake Stomp
     G.shake(4.5); G.area(u, x, y, R, u.sp.dmg);
   } };
 
-ATTACKS.quarrilla = { dur: .98, at: .5,                     // Rock Uppercut
-  pose(u, k) { ram(u, k, 2, 7, .5); u.sy = 1 - Ease.hump(Ease.seg(k, .3, .5)) * .1; },
+ATTACKS.quarrilla = { dur: .98, at: .5,                     // Rock Uppercut: a real swing from the hip that lifts the target off its feet
+  pose(u, k) { ram(u, k, 2, 7, .5); u.sy = 1 - Ease.hump(Ease.seg(k, .3, .5)) * .1 + Ease.hump(Ease.seg(k, .5, .8)) * .08; u.lift = Ease.hump(Ease.seg(k, .5, .85)) * 5; },
   start(G, u) {
-    // a quick chest-drum before the punch
     const fx = G.fx;
-    for (let i = 0; i < 3; i++) fx.after(.05 + i * .085, () => { if (u.state !== 'active') return; const m = muzzle(u, (i % 2 ? 5 : -3), 12); fx.ring(m.x, m.y, 2, 9, .16, '#fff3d6', 1.8); });
+    for (let i = 0; i < 3; i++) fx.after(.04 + i * .065, () => { if (u.state !== 'active') return; const m = muzzle(u, (i % 2 ? 5 : -3), 12); fx.ring(m.x, m.y, 2, 9, .16, '#fff3d6', 1.8); });
   },
   fire(G, u, tg) {
-    const fx = G.fx, x = tg.x, y = tg.y;
-    // a fist of rock bursts up from below
-    fx.add({ dur: .8, ground: true, draw(ctx, k) {
-      const h = k < .2 ? Ease.outBack(k / .2) * 34 : k < .6 ? 34 : 34 * (1 - Ease.inCubic((k - .6) / .4));
-      ctx.translate(x, y); ctx.globalAlpha = k > .82 ? 1 - (k - .82) / .18 : 1; ctx.lineJoin = 'round';
-      ctx.fillStyle = '#95795a'; ctx.strokeStyle = '#3a3028'; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-6.5, -h + 8); ctx.lineTo(6.5, -h + 8); ctx.lineTo(9, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = '#6b563f'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-3, -2); ctx.lineTo(-1.6, -h * .45); ctx.lineTo(-3.6, -h * .7); ctx.moveTo(3.6, -4); ctx.lineTo(2, -h * .5); ctx.stroke();
-      ctx.fillStyle = '#c4ae90'; ctx.strokeStyle = '#3a3028'; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(-10, -h + 9); ctx.lineTo(-11, -h); ctx.lineTo(-5.5, -h - 7); ctx.lineTo(6.5, -h - 7); ctx.lineTo(11, -h); ctx.lineTo(10, -h + 9); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-3.4, -h - 6); ctx.lineTo(-3.4, -h + 2); ctx.moveTo(2.2, -h - 6); ctx.lineTo(2.2, -h + 2); ctx.stroke();
-      ctx.fillStyle = '#6fc45a'; ctx.beginPath(); ctx.arc(-7, -h - 3, 2.4, 0, TAU); ctx.fill();
-    } });
-    shock(fx, x, y, 6, 26, .36, '#e6c890', true);
-    fx.burst(x, y, 9, { col: ['#b89d7c', '#95795a'], shape: 'q', spd: 85, life: .55, size: 3.2, up: 90, g: 380, vr: 10 });
-    fx.burst(x, y, 6, { col: 'rgba(190,160,125,.75)', shape: 'p', spd: 34, life: .5, size: 5.5, grow: 9, flat: .5 });
-    const bx = bodyX(tg), by = bodyY(tg);
-    impact(G, 'stone', bx, by, 1.05, x, y);
+    const fx = G.fx, x = tg.x, y = tg.y, bx = bodyX(tg), by = bodyY(tg), m = emit(u, 24, 30);
+    // chips of rock fly off the fist as it comes up through the target
+    for (let i = 0; i < 6; i++) fx.p({ x: m.x + rnd(-3, 3), y: m.y + rnd(-2, 6), vx: u.adx * rnd(10, 50) + rnd(-25, 25), vy: rnd(-170, -90), g: 420, life: .6, size: rnd(2, 3.4), col: pick(['#c4ae90', '#95795a', '#e6d3b0']), shape: 'q', vr: 12, rot: rnd(TAU) });
+    fx.pow(bx - u.adx * 6, by + 4, 11, '#e6c890', '#ffffff');
+    impact(G, 'stone', bx, by + 3, 1.1, x, y, -PI / 2);
+    shock(fx, x, y, 6, 24, .34, '#e6c890', true);
+    fx.burst(x, y, 5, { col: 'rgba(190,160,125,.7)', shape: 'p', spd: 30, life: .5, size: 5, grow: 9, flat: .5 });
     // whoosh lines as the target is launched
-    fx.add({ dur: .3, draw(ctx, k) { ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.8; ctx.lineCap = 'round'; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(bx + i * 8, by + 4 - k * 16); ctx.lineTo(bx + i * 8, by + 16 - k * 10); ctx.stroke(); } } });
+    fx.add({ dur: .32, draw(ctx, k) { ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.7; ctx.lineCap = 'round'; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(bx + i * 8, by + 6 - k * 18); ctx.lineTo(bx + i * 8, by + 18 - k * 10); ctx.stroke(); } } });
     G.shake(3.5); G.hit(u, tg, u.sp.dmg);
     if (tg.state === 'active') tg.kz = 150;
   } };
@@ -739,15 +726,15 @@ ATTACKS.jerboing = { dur: .98, at: .62, commit: true,       // Burrow Pop
     burrowHole(fx, x, y);
     for (let i = 0; i < 18; i++) fx.p({ x: x + rnd(-6, 6), y, vx: rnd(-60, 60), vy: rnd(-180, -70), g: 420, life: .65, size: rnd(2, 3.8), col: pick(['#8a623a', '#b08a5a', '#6a4826']) });
     shock(fx, x, y, 5, 24, .36, '#e6c890', true);
-    impact(G, 'stone', bodyX(tg), bodyY(tg), .95, tg.x, tg.y);
+    impact(G, 'stone', bodyX(tg), bodyY(tg), .95, tg.x, tg.y, aim(u));
     G.shake(2.5); G.hit(u, tg, u.sp.dmg);
   } };
 
 ATTACKS.glintgecko = { dur: .9, at: .5,                     // Prism Shard
   pose(u, k) { lunge(u, k, -4, .5); u.sy = 1 + Ease.hump(Ease.seg(k, .1, .5)) * .06; },
-  start(G, u) { charge(G, u, .9 * .48, () => muzzle(u, -1, 29), 17, 'mystic'); },
+  start(G, u) { charge(G, u, .9 * .48, () => emit(u, -1, 29), 17, 'mystic'); },
   fire(G, u, tg) {
-    const fx = G.fx, m = muzzle(u, -1, 29); let hue = 0;
+    const fx = G.fx, m = emit(u, -1, 29); let hue = 0;
     cross(fx, m.x, m.y, 18, '#ffffff', .25);
     shoot(G, tg, { x: m.x, y: m.y, speed: 320, trailEvery: .02, tail: { n: 13, w: 7, col: '#ff9ad8', core: '#ffffff', add: true }, glow: { r: 15, col: '#bff3ff', al: .8 },
       draw(ctx, x, y, an, k) {
@@ -775,7 +762,7 @@ ATTACKS.glintgecko = { dur: .9, at: .5,                     // Prism Shard
 
 ATTACKS.ankhat = { dur: .98, at: .45,                       // Pyramid Seal
   pose(u, k) { const p = Ease.hump(Ease.seg(k, .1, .7)); u.lift = p * 4; u.sy = 1 + p * .05; },
-  start(G, u) { charge(G, u, .98 * .42, () => muzzle(u, 2, 37), 16, 'gold'); },
+  start(G, u) { charge(G, u, .98 * .42, () => emit(u, 2, 37), 16, 'gold'); },
   fire(G, u, tg) {
     const fx = G.fx, x = tg.x, y = tg.y, R = u.sp.aoe;
     groundGlow(fx, x, y, R * 1.5, '#ffd34a', 1, .7);
