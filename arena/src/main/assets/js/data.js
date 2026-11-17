@@ -134,7 +134,7 @@ const TEAM = {}; TEAMS.forEach((tm, i) => { tm.i = i; TEAM[tm.id] = tm; });
 
 const RULES = {
   FW: 300, FH: 440,          // battlefield size in field units
-  MAX_FIELD: 6,              // creatures per side
+  MAX_FIELD: 5,              // creatures per side
   KO_TARGET: 15,             // first to this many knockouts wins
   STINT: 60,                 // seconds a creature stays out before it is called back
   SPREAD: 1.22,              // how far apart creatures settle, in combined body radii

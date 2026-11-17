@@ -36,8 +36,8 @@ const League = (() => {
     const pair = st.sched[st.round].find(p => p[0] === st.team || p[1] === st.team);
     return TEAM[pair[0] === st.team ? pair[1] : pair[0]];
   }
-  // rival coaches get sharper as the season goes on
-  function rivalSkill() { return clamp(.3 + st.round * .065 + (st.season - 1) * .09, .25, .97); }
+  // rival coaches pick more sharply as the season goes on (nothing else about them changes)
+  function rivalSkill() { return clamp(.15 + st.round * .085 + (st.season - 1) * .1, .15, .95); }
 
   function record(a, b, sa, sb) {
     const ta = st.table[a], tb = st.table[b];

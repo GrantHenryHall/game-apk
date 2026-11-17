@@ -24,21 +24,11 @@ const UI = {
   dropPoint() { const p = this.toField(this.drag.x, this.drag.y - 34); return App.G.clampDeploy(0, p.x, p.y); },
   overField() { return this.drag && this.drag.y < App.V.H - App.V.trayH - 2; },
 
-  // how well an element matches up against what the rival has out right now
-  matchup(el) {
-    let up = 0, down = 0;
-    for (const u of App.G.units) {
-      if (u.side !== 1 || (u.state !== 'active' && u.state !== 'deploy')) continue;
-      if (BEATS[el].indexOf(u.sp.el) >= 0) up++;
-      if (BEATS[u.sp.el].indexOf(el) >= 0) down++;
-    }
-    return { up, down };
-  },
   whyNot(sp) {
     const G = App.G;
     if (G.state !== 'play') return G.state === 'intro' ? 'Wait for the whistle!' : null;
     if (G.has(0, sp.id)) return sp.name + ' is already out!';
-    if (G.count(0) >= RULES.MAX_FIELD) return 'Field is full: 6 out';
+    if (G.count(0) >= RULES.MAX_FIELD) return 'Field is full: ' + RULES.MAX_FIELD + ' out';
     return null;
   },
 
@@ -121,7 +111,7 @@ const UI = {
     ctx.fillStyle = pg2; ctx.fillRect(0, ty, V.W, V.trayH);
     ctx.fillStyle = '#ffd23d'; ctx.fillRect(0, ty, V.W, 2.5);
 
-    // element tabs with a live matchup badge (hidden mid-drag: the row becomes the hint line)
+    // element tabs (hidden mid-drag: the row becomes the hint line)
     for (let i = 0; i < 10 && !this.drag; i++) {
       const e = ELEMENTS[i], r = this.tabs[i], on = i === this.sel, rr = on ? 15 : 12.5;
       if (on) { ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(r.cx, r.cy, rr + 2.4, 0, TAU); ctx.fill(); }
@@ -130,15 +120,6 @@ const UI = {
       ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.beginPath(); ctx.arc(r.cx, r.cy - rr * .25, rr * .8, PI, TAU); ctx.fill();
       elGlyph(ctx, e.id, r.cx, r.cy, rr * .56, '#fff');
       ctx.globalAlpha = 1;
-      const m = this.matchup(e.id), net = m.up - m.down;
-      if (net !== 0) {
-        const bx = r.cx + 10, by = r.cy - 11;
-        ctx.fillStyle = '#1d2347'; ctx.beginPath(); ctx.arc(bx, by, 6.4, 0, TAU); ctx.fill();
-        ctx.fillStyle = net > 0 ? '#57e06a' : '#ff5d6c'; ctx.beginPath(); ctx.arc(bx, by, 5.2, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.beginPath();
-        if (net > 0) { ctx.moveTo(bx, by - 3); ctx.lineTo(bx + 3, by + 2); ctx.lineTo(bx - 3, by + 2); } else { ctx.moveTo(bx, by + 3); ctx.lineTo(bx + 3, by - 2); ctx.lineTo(bx - 3, by - 2); }
-        ctx.closePath(); ctx.fill();
-      }
     }
 
     const showInfo = this.drag ? this.drag.sp : this.info ? this.info.sp : null;
@@ -218,15 +199,15 @@ const UI = {
       ctx.font = '900 6.6px ' + FONT; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(label, x + w - 76, cy - 14.5);
       ids.forEach((id, i) => { const cx = x + w - 66 + i * 26; ctx.fillStyle = EL[id].col; ctx.beginPath(); ctx.arc(cx, cy, 9.4, 0, TAU); ctx.fill(); elGlyph(ctx, id, cx, cy, 5.2, '#fff'); });
     };
-    chips('▲ STRONG VS', BEATS[sp.el], '#2fae48', y + 32);
-    chips('▼ WEAK TO', ELEMENTS.filter(q => BEATS[q.id].indexOf(sp.el) >= 0).map(q => q.id), '#e0455a', y + h - 15);
+    chips('STRONG VS', BEATS[sp.el], '#2fae48', y + 32);
+    chips('WEAK TO', ELEMENTS.filter(q => BEATS[q.id].indexOf(sp.el) >= 0).map(q => q.id), '#e0455a', y + h - 15);
     if (this.drag) {
       const ok = this.overField();
       chunkyText(ctx, ok ? 'RELEASE TO SEND OUT' : 'DROP HERE TO CANCEL', V.ox + 180, V.H - V.trayH + 22, 11, ok ? '#57e06a' : '#ffb1b8', '#1d2347', 3.4);
     }
   },
 
-  // field-space extras while dragging: the legal zone, the ghost, matchup arrows over rivals
+  // field-space extras while dragging: the legal zone and the ghost of the creature being placed
   dragGround(ctx, time) {
     if (!this.drag) return;
     const M = 6, a = .13 + Math.sin(time * 5) * .04;
@@ -242,20 +223,7 @@ const UI = {
   },
   dragAir(ctx, time) {
     if (!this.drag) return;
-    const sp = this.drag.sp, G = App.G;
-    for (const u of G.units) {
-      if (u.side !== 1 || u.state !== 'active') continue;
-      const good = BEATS[sp.el].indexOf(u.sp.el) >= 0, bad = BEATS[u.sp.el].indexOf(sp.el) >= 0;
-      if (!good && !bad) continue;
-      const x = u.x, y = u.y - 50 * u.vs - 8 + Math.sin(time * 6 + u.id) * 1.5;
-      ctx.fillStyle = '#1d2347'; ctx.beginPath(); ctx.arc(x, y, 8.4, 0, TAU); ctx.fill();
-      ctx.fillStyle = good && bad ? '#ffcf33' : good ? '#57e06a' : '#ff5d6c'; ctx.beginPath(); ctx.arc(x, y, 7, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.beginPath();
-      if (good && bad) { ctx.moveTo(x, y - 4); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 4); ctx.lineTo(x - 4, y); }
-      else if (good) { ctx.moveTo(x, y - 4); ctx.lineTo(x + 4, y + 2.6); ctx.lineTo(x - 4, y + 2.6); }
-      else { ctx.moveTo(x, y + 4); ctx.lineTo(x + 4, y - 2.6); ctx.lineTo(x - 4, y - 2.6); }
-      ctx.closePath(); ctx.fill();
-    }
+    const sp = this.drag.sp;
     if (this.overField()) {
       const d = this.dropPoint(), s = visScale(sp.r);
       ctx.save(); ctx.globalAlpha = .82; ctx.translate(d.x, d.y - 3 - Math.abs(Math.sin(time * 6)) * 2); ctx.scale(s, s);

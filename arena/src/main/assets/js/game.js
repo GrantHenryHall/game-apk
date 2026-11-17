@@ -320,7 +320,9 @@ class Game {
 
 // ---------- the rival coach ----------
 class AIPlayer {
-  constructor(side, team, skill) { this.side = side; this.team = team; this.skill = skill; this.t = rnd(.3, .8); }
+  // `smart` (0..1) is the only thing that differs between an easy and a hard coach: how well it PICKS.
+  // Every coach sends creatures out at the same human pace and places them the same sensible way.
+  constructor(side, team, smart) { this.side = side; this.team = team; this.smart = smart; this.t = rnd(.5, 1); }
   update(dt, G) {
     this.t -= dt; if (this.t > 0) return;
     const n = G.count(this.side);
@@ -329,29 +331,29 @@ class AIPlayer {
     if (!sp) { this.t = .5; return; }
     const p = this.place(G, sp);
     G.deploy(this.side, sp.id, p.x, p.y);
-    const base = lerp(2.7, .75, this.skill);
-    this.t = (n < 3 ? base * .45 : base) * rnd(.7, 1.3);
+    this.t = (n < 2 ? 1.2 : 2.3) * rnd(.75, 1.3);
   }
   choose(G) {
-    const mine = G.side(this.side), foes = G.side(1 - this.side);
+    const mine = G.side(this.side), foes = G.side(1 - this.side), sm = this.smart;
     const have = { tank: 0, brawler: 0, dasher: 0, sniper: 0, caster: 0 };
     mine.forEach(u => { have[u.sp.role]++; });
-    const want = { tank: 1.3, brawler: 1.4, dasher: 1, sniper: 1.5, caster: 1 };
+    const want = { tank: 1.2, brawler: 1.2, dasher: .8, sniper: 1.2, caster: .8 };
     const foeRanged = foes.filter(u => u.sp.role === 'sniper' || u.sp.role === 'caster').length, foeMelee = foes.length - foeRanged;
+    const counterW = Math.max(0, sm - .25) * 2.7;      // an easy coach does not read your side at all
     let best = null, bs = -1e9;
     for (const sp of SPECIES) {
       if (G.has(this.side, sp.id)) continue;
-      let s = Math.random() * (1.7 - this.skill * 1.25);
-      if (sp.el === this.team.el) s += .9;
-      s += (want[sp.role] - have[sp.role]) * .55;
-      if (have.tank === 0 && sp.role === 'tank') s += .5;
-      if (foes.length) {
+      let s = Math.random() * lerp(2.4, .5, sm);                 // whim: big for an easy coach, small for a sharp one
+      if (sp.el === this.team.el) s += lerp(1.3, .7, sm);        // everyone favours their home element
+      s += (want[sp.role] - have[sp.role]) * lerp(.15, .7, sm);  // a sense of team shape
+      if (have.tank === 0 && sp.role === 'tank') s += .6 * sm;
+      if (foes.length && counterW > 0) {
         let mu = 0;
         for (const e of foes) { const at = typeMult(sp.el, e.sp.el), df = typeMult(e.sp.el, sp.el); mu += (at > 1 ? 1 : at < 1 ? -.5 : 0) + (df > 1 ? -1 : df < 1 ? .5 : 0); }
-        s += this.skill * 1.8 * mu / foes.length;
+        s += counterW * mu / foes.length;
+        if (sp.role === 'dasher') s += sm * .3 * foeRanged;      // dive a ranged-heavy side
+        if (sp.role === 'caster') s += sm * .15 * foeMelee;      // blast a melee clump
       }
-      if (sp.role === 'dasher') s += this.skill * .25 * foeRanged;
-      if (sp.role === 'caster') s += this.skill * .12 * foeMelee;
       if (s > bs) { bs = s; best = sp; }
     }
     return best;
@@ -360,7 +362,7 @@ class AIPlayer {
     const foes = G.side(1 - this.side), mine = G.side(this.side), M = RULES.MARGIN;
     let cx = FW / 2;
     if (foes.length) cx = foes.reduce((a, u) => a + u.x, 0) / foes.length;
-    const wob = 1.4 - this.skill;
+    const wob = .7;
     let depth, x;
     switch (sp.role) {
       case 'tank': depth = .16; x = cx + rnd(-28, 28) * wob; break;

@@ -45,6 +45,8 @@
   .btn.green { background: #7fe38a; }
   .btn.ghost { background: #fff; font-size: 1.05rem; padding: .75rem .3rem; box-shadow: 0 .3rem 0 var(--navy); }
   .btn.small { font-size: 1.2rem; padding: .7rem .6rem; }
+  .btn.diff { padding: .8rem .6rem; }
+  .btn.diff small { display: block; font-size: 1.02rem; font-weight: 800; opacity: .7; letter-spacing: 0; margin-top: .1rem; }
 
   /* team picker */
   .teams { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; padding-bottom: 1.4rem; }
@@ -143,14 +145,25 @@
       <div class="panel how">
         <ul>
           <li>Tap an <b>element</b>, then <b>drag a creature</b> onto your half of the field. It fights on its own.</li>
-          <li>All <b>50 creatures</b> are ready at all times. No costs, no waiting. Up to <b>6</b> on the field.</li>
+          <li>All <b>50 creatures</b> are ready at all times. No costs, no waiting. Up to <b>5</b> on the field.</li>
           <li><b>First to 15 KOs wins.</b> Every creature you lose is a point for your rival, so pick your matchups.</li>
-          <li>Elements matter: <b>&#9650; green</b> means strong against what the rival has out, <b>&#9660; red</b> means weak.</li>
+          <li>Elements matter: each one is <b>strong against two</b> others and <b>weak to two</b>. Tap a creature's card to see which. Reading the rival's side is up to you.</li>
           <li><b>Guardians</b> soak damage up front. <b>Snipers</b> and <b>Casters</b> hit from behind them. <b>Dashers</b> dive past and hunt the back line. <b>Brawlers</b> stop the Dashers.</li>
           <li>A creature heads home after <b>60 seconds</b> in the arena. Keep at least one out, or the rival scores.</li>
         </ul>
       </div>
       <div class="row" style="margin:1.4rem 0"><button id="b-howok" class="btn big">GOT IT!</button></div>
+    </div>
+  </section>
+
+  <section id="s-diff" class="screen dim">
+    <div class="panel card">
+      <h2 style="font-size:2.6rem">QUICK BATTLE</h2>
+      <p class="sub">How sharp is the rival coach at picking creatures?</p>
+      <button class="btn big diff" data-diff="easy" style="width:100%;background:#7fe38a">EASY<small>picks whatever it fancies</small></button>
+      <button class="btn big diff" data-diff="medium" style="width:100%;margin-top:.8rem">MEDIUM<small>builds a sensible team</small></button>
+      <button class="btn big diff" data-diff="hard" style="width:100%;margin-top:.8rem;background:#ff9a8a">HARD<small>counters what you send out</small></button>
+      <div class="row"><button class="btn ghost" data-go="title">BACK</button></div>
     </div>
   </section>
 

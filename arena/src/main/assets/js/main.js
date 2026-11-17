@@ -111,7 +111,7 @@ const App = {
     Object.keys(G.stats.best).forEach(k => { if (k.slice(-1) === '0' && G.stats.best[k] > bn) { bn = G.stats.best[k]; best = SP[k.slice(0, -1)]; } });
     $('rs-mvp').innerHTML = best ? '<img src="' + this.spImg(best) + '"><span>Star of the match<br><b style="font-size:1.7rem">' + best.name + '</b><br>' + bn + ' KO' + (bn > 1 ? 's' : '') + '</span>' : '';
     const mins = Math.floor(G.time / 60), secs = Math.floor(G.time % 60);
-    $('rs-sub').textContent = 'vs ' + G.teams[1].name + ' · ' + G.stats.sent[0] + ' creatures sent · ' + mins + ':' + (secs < 10 ? '0' : '') + secs;
+    $('rs-sub').textContent = (m.diff ? m.diff.toUpperCase() + ' · ' : '') + 'vs ' + G.teams[1].name + ' · ' + G.stats.sent[0] + ' creatures sent · ' + mins + ':' + (secs < 10 ? '0' : '') + secs;
     $('b-rematch').style.display = m.league ? 'none' : '';
     $('b-continue').textContent = m.league ? 'LEAGUE TABLE' : 'CONTINUE';
     this.show('result');
@@ -173,7 +173,7 @@ const App = {
     document.querySelectorAll('.dex').forEach(b => b.classList.toggle('on', b.id === 'dex-' + sp.id));
     const e = EL[sp.el], weak = ELEMENTS.filter(q => BEATS[q.id].indexOf(sp.el) >= 0).map(q => q.name).join(', ');
     $('dexinfo').innerHTML = '<div class="nm">' + sp.name + '<span class="tag" style="background:' + e.col + '">' + e.name.toUpperCase() + '</span><span class="tag" style="background:' + e.dark + '">' + ROLES[sp.role].name.toUpperCase() + '</span></div>' +
-      '<p>' + sp.move + ' — ' + sp.blurb + '</p><p>▲ Strong vs ' + BEATS[sp.el].map(id => EL[id].name).join(', ') + ' · ▼ Weak to ' + weak + '</p>';
+      '<p>' + sp.move + ' — ' + sp.blurb + '</p><p>Strong vs ' + BEATS[sp.el].map(id => EL[id].name).join(', ') + ' · Weak to ' + weak + '</p>';
     const G = new Game({ teams: [TEAMS[e.i], TEAMS[(e.i + 5) % 10]], ai: [null, null], demo: true });
     G.sandbox = true;
     const a = G.deploy(0, sp.id, 80, 300), d = G.deploy(1, sp.id === 'cobblem' ? 'walrump' : 'cobblem', 220, 100);
@@ -201,7 +201,12 @@ const App = {
 
     const click = (id, fn) => { $(id).addEventListener('click', () => { Sfx.play('ui'); fn(); }); };
     click('b-league', () => this.openLeague());
-    click('b-quick', () => { const mine = this.myTeam(); this.startBattle({ rival: pick(TEAMS.filter(tm => tm !== mine)), skill: .5, league: false }); });
+    click('b-quick', () => this.show('diff'));
+    const SMART = { easy: .15, medium: .5, hard: .9 };
+    document.querySelectorAll('.diff').forEach(b => b.addEventListener('click', () => {
+      Sfx.play('ui'); const d = b.getAttribute('data-diff'), mine = this.myTeam();
+      this.startBattle({ rival: pick(TEAMS.filter(tm => tm !== mine)), skill: SMART[d], diff: d, league: false });
+    }));
     click('b-dex', () => this.openDex());
     click('b-how', () => { this.pending = null; this.show('how'); });
     click('b-howok', () => { try { localStorage.setItem('sunlings.how', '1'); } catch (e) { /* ignore */ } const p = this.pending; this.pending = null; if (p) this.startBattle(p); else this.show('title'); });

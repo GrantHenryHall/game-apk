@@ -367,9 +367,9 @@ function drawUnit(ctx, G, u, time) {
     ctx.fillStyle = 'rgba(25,20,40,.6)'; ctx.fillRect(bx, by + 6.6, bw, 1.6);
     ctx.fillStyle = lf < .17 ? '#ffd23d' : '#ffffff'; ctx.fillRect(bx, by + 6.6, bw * lf, 1.6);
     const e = EL[u.sp.el];
-    ctx.beginPath(); ctx.arc(bx - 5, by + 2, 4.4, 0, TAU); ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.beginPath(); ctx.arc(bx - 5, by + 2, 3.6, 0, TAU); ctx.fillStyle = e.col; ctx.fill();
-    elGlyph(ctx, e.id, bx - 5, by + 2, 2.3, '#fff');
+    ctx.beginPath(); ctx.arc(bx - 7.5, by + 2.4, 6.5, 0, TAU); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(bx - 7.5, by + 2.4, 5.5, 0, TAU); ctx.fillStyle = e.col; ctx.fill();
+    elGlyph(ctx, e.id, bx - 7.5, by + 2.4, 3.5, '#fff');
   }
 }
 
